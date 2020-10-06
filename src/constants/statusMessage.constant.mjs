@@ -1,0 +1,20 @@
+export const OK = "OK";
+export const POST_IS_NOT_EXISTED = "Post id not existed";
+export const CODE_VERIFY_IS_INCORRECT = "Code verify is incorrect";
+export const NO_DATA_OR_END_OF_LIST_DATA = "No data or end of list data";
+export const USER_IS_NOT_VALIDATED = "User is not validated";
+export const USER_EXISTED = "User existed";
+export const METHOD_IS_INVALID = "Method is invalid";
+export const TOKEN_IS_INVALID = "Token is invalid";
+export const EXCEPTION_ERROR = "Exception error";
+export const CAN_NOT_CONNECT_TO_DB = "Can not connect to DB";
+export const PARAMETER_IS_NOT_ENOUGHT = "Parameter is not enought";
+export const PARAMETER_TYPE_IS_INVALID = "Parameter type is invalid";
+export const PARAMETER_VALUE_IS_INVALID = "Parameter value is invalid";
+export const UNKNOWN_ERROR = "Unknown error";
+export const FILE_SIZE_IS_TOO_BIG = "File size is too big";
+export const UPLOAD_FILE_FAILED = "Upload file failed";
+export const MAXIMUM_NUMBER_OF_IMAGES = "Maximum number of images";
+export const NOT_ACCESS = "Not access";
+export const ACTION_HAS_BEEN_DONE_PREVIOUSLY_BY_THIS_USER =
+  "Action has been done previously by this user";
