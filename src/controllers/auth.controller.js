@@ -22,8 +22,10 @@ const refreshTokenSecret =
   process.env.REFRESH_TOKEN_SECRET || "refreshTokenSecret";
 
 const signup = async (req, res) => {
-  const { phonenumber, password, uuid } = req.body;
-
+  // const { phonenumber, password, uuid } = req.body;
+  const { phonenumber, password, uuid } = req.query;
+  // phonenumber không tồn tại, độ dài khác 10, không có số không đầu tiên,
+  // chứa kí tự không phải số
   if (
     !phonenumber ||
     phonenumber.length != 10 ||
@@ -35,6 +37,7 @@ const signup = async (req, res) => {
       message: statusMessage.PARAMETER_VALUE_IS_INVALID,
     });
   } else if (
+    // password không tồn tại, độ dài nhỏ hơn sáu hoặc lớn hơn 10, password giống phonenumber
     !password ||
     password.length < 6 ||
     password.length > 10 ||
@@ -46,6 +49,7 @@ const signup = async (req, res) => {
       message: statusMessage.PARAMETER_VALUE_IS_INVALID,
     });
   } else if (!uuid) {
+    // uuid không tồn tại
     return res.status(200).json({
       code: statusCode.PARAMETER_VALUE_IS_INVALID,
       message: statusMessage.PARAMETER_VALUE_IS_INVALID,
@@ -53,11 +57,12 @@ const signup = async (req, res) => {
   } else {
     const userData = await User.findOne({ phonenumber: phonenumber });
     if (!userData) {
-      //chua co
+      //chưa có phonenumber đã được đăng kí
       const hashedPassword = md5(password);
       const user = await new User({
         phonenumber: phonenumber,
         password: hashedPassword,
+        active: -1,
       }).save();
       return res.status(200).json({
         code: statusCode.OK,
@@ -65,6 +70,7 @@ const signup = async (req, res) => {
         user,
       });
     } else {
+      // phonenumber đã được đăng kí từ trước
       return res.status(200).json({
         code: statusCode.USER_EXISTED,
         message: statusMessage.USER_EXISTED,
@@ -74,14 +80,16 @@ const signup = async (req, res) => {
 };
 
 const login = async (req, res) => {
-  try {
-    const { phonenumber, password } = req.body;
+    // const { phonenumber, password } = req.body; 
+    const { phonenumber, password } = req.query;// gửi bằng query params
     if (
       !phonenumber ||
       phonenumber.length != 10 ||
       phonenumber[0] != "0" ||
       phonenumber.match(/[^0-9]/g)
     ) {
+      // phonenumber không tồn tại, độ dài khác 10, không có số không đầu tiên,
+      // chứa kí tự không phải số
       return res.status(200).json({
         code: statusCode.PARAMETER_VALUE_IS_INVALID,
         message: statusMessage.PARAMETER_VALUE_IS_INVALID,
@@ -93,27 +101,34 @@ const login = async (req, res) => {
       password === phonenumber ||
       password.match(/[^a-z|A-Z|0-9]/g)
     ) {
+      // password không tồn tại, độ dài nhỏ hơn sáu hoặc lớn hơn 10, password giống phonenumber
+      // chứa các kí tự khác chữ thường, chữ in hoa, chữ số(Latin)
       return res.status(200).json({
         code: statusCode.PARAMETER_VALUE_IS_INVALID,
         message: statusMessage.PARAMETER_VALUE_IS_INVALID,
       });
-    } else {
+    } else {// nhập đúng định dạng phonenumber và password
+      // tìm dữ liệu user qua phonenumber
       const userData = await User.findOne({
         phonenumber: req.body.phonenumber,
       });
       if (userData) {
-        const hashedPassword = md5(req.body.password);
+        // tìm được user có trong hệ thống
+        const hashedPassword = md5(req.body.password);// mã hoá password
         if (hashedPassword == userData.password) {
+          // kiểm tra password
+          // tạo token
           const accessToken = await jwtHelper.generateToken(
             userData,
             accessTokenSecret,
             accessTokenLife
           );
-          const refreshToken = await jwtHelper.generateToken(
-            userData,
-            refreshTokenSecret,
-            refreshTokenLife
-          );
+          // const refreshToken = await jwtHelper.generateToken(
+          //   userData,
+          //   refreshTokenSecret,
+          //   refreshTokenLife
+          // );
+          // lưu token tương ứng vs user, nếu đã tốn tại token thì thay thế token
           await User.findOneAndUpdate(
             { _id: userData._id },
             {
@@ -122,7 +137,6 @@ const login = async (req, res) => {
               },
             }
           );
-          // console.log(tokenList)
           return res.status(200).json({
             code: statusCode.OK,
             message: statusMessage.OK,
@@ -130,57 +144,56 @@ const login = async (req, res) => {
               id: userData._id,
               username: userData.username,
               token: accessToken,
-              refreshToken: refreshToken,
+              // refreshToken: refreshToken, // chưa cần dùng
               avatar: userData.avatar,
             },
           });
         } else {
+          // password không hợp lệ
           res.status(200).json({
             code: statusCode.USER_IS_NOT_VALIDATED,
             message: statusMessage.USER_IS_NOT_VALIDATED,
           });
         }
       } else {
+        // phonenumber chưa được đăng kí
         res.status(200).json({
           code: statusCode.USER_IS_NOT_VALIDATED,
           message: statusMessage.USER_IS_NOT_VALIDATED,
         });
       }
     }
-  } catch (error) {
-    return res.status(500).json(error);
-  }
 };
 
-const refreshToken = async (req, res) => {
-  const refreshTokenFromClient = req.body.refreshToken;
-  if (refreshTokenFromClient && tokenList[refreshTokenFromClient]) {
-    try {
-      const decoded = await jwtHelper.verifyToken(
-        refreshTokenFromClient,
-        refreshTokenSecret
-      );
+// const refreshToken = async (req, res) => {
+//   const refreshTokenFromClient = req.body.refreshToken;
+//   if (refreshTokenFromClient && tokenList[refreshTokenFromClient]) {
+//     try {
+//       const decoded = await jwtHelper.verifyToken(
+//         refreshTokenFromClient,
+//         refreshTokenSecret
+//       );
 
-      const userData = decoded.data;
+//       const userData = decoded.data;
 
-      const accessToken = await jwtHelper.generateToken(
-        userData,
-        accessTokenSecret,
-        accessTokenLife
-      );
+//       const accessToken = await jwtHelper.generateToken(
+//         userData,
+//         accessTokenSecret,
+//         accessTokenLife
+//       );
 
-      return res.status(200).json({ accessToken });
-    } catch (error) {
-      res.status(403).json({
-        message: "Invalid refresh token.",
-      });
-    }
-  } else {
-    return res.status(403).json({
-      message: "No token provided.",
-    });
-  }
-};
+//       return res.status(200).json({ accessToken });
+//     } catch (error) {
+//       res.status(403).json({
+//         message: "Invalid refresh token.",
+//       });
+//     }
+//   } else {
+//     return res.status(403).json({
+//       message: "No token provided.",
+//     });
+//   }
+// };
 
 const getVerifyCode = async (req, res) => {
   const { phonenumber } = req.body;
@@ -230,55 +243,13 @@ const checkVerifyCode = async (req, res) => {
   }
 };
 
-const changeInfoAfterSignup = async (req, res) => {
-  // console.log(req, "jajja")
-  const { _id, phonenumber } = req.jwtDecoded.data;
-  const { token, username } = req.query;
 
-  const form = new formidable.IncomingForm();
-  // console.log(form)
-  await form.parse(req, async (err, fields, files) => {
-    const oldpath = files.avatar.path;
-    const typeFile = files.avatar.name.split(".")[1];
-    // console.log(fields)
-    const newpath = `upload/${_id}${Date.now()}.${typeFile}`;
-    const isErrorSave = saveFile.saveFile(oldpath, newpath);
-    if (err) {
-      throw err;
-    } else {
-      const userData = await User.findByIdAndUpdate(_id, {
-        $set: {
-          username: fields.username,
-          avatar: newpath,
-        },
-      });
-
-      return res.status(200).json({
-        code: statusCode.OK,
-        message: statusMessage.OK,
-        data: {
-          id: _id,
-          username: fields.username,
-          phonenumber: phonenumber,
-          created: Date.now(),
-          avatar: newpath,
-        },
-      });
-    }
-    // fs.rename(oldpath, newpath, (err) => {
-    //   if (err) {
-    //     throw err;
-    //   }
-
-    // });
-  });
-};
 
 export default {
   login,
-  refreshToken,
+  // refreshToken,
   signup,
   getVerifyCode,
   checkVerifyCode,
-  changeInfoAfterSignup,
+  // changeInfoAfterSignup, // move to user.controller.js
 };

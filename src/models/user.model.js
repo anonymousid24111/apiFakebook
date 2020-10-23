@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema({
   avatar: String,
   token: String,
   blockedIds: Array,
+  active: Number
 });
 
 const User = mongoose.model("User", userSchema, "users");
