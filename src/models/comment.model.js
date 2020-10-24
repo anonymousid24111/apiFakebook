@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require( "mongoose");
 
 const commentSchema = new mongoose.Schema({
   author: String,// id
@@ -8,4 +8,4 @@ const commentSchema = new mongoose.Schema({
 
 const comment = mongoose.model("comment", commentSchema, "comments");
 
-export default comment;
+module.exports = comment;

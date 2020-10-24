@@ -1,4 +1,4 @@
-import fs from "fs";
+const fs = require( "fs");
 
 let saveFile = (oldpath, newpath) => {
   return new Promise((resolve, reject) => {
@@ -12,6 +12,6 @@ let saveFile = (oldpath, newpath) => {
   });
 };
 
-export default {
+module.exports = {
   saveFile: saveFile,
 };

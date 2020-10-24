@@ -1,22 +1,21 @@
-import dotenv from "dotenv";
-dotenv.config();
+require("dotenv").config();
 
-import express from "express";
-import bodyParser from "body-parser";
-import formidable from "formidable";
-import fs from "fs";
-// import cookieParser from 'cookie-parser'
-import mongoose from "mongoose";
+const express = require( "express");
+const bodyParser = require( "body-parser");
+const formidable = require( "formidable");
+const fs = require( "fs");
+// const cookieParser = require( 'cookie-parser'
+const mongoose = require( "mongoose");
 mongoose.connect(process.env.MONGO_URL || "mongodb://localhost/apiFakebook", {
   useUnifiedTopology: true,
   useNewUrlParser: true,
 });
 
-import userRoute from "./src/routes/user.route.js";
-import authRoute from "./src/routes/auth.route.js";
-import postRoute from "./src/routes/post.route.js";
+const userRoute = require( "./src/routes/user.route.js");
+const authRoute = require( "./src/routes/auth.route.js");
+const postRoute = require( "./src/routes/post.route.js");
 
-import authMiddleware from "./src/middlewares/auth.middleware.js";
+const authMiddleware = require( "./src/middlewares/auth.middleware.js");
 
 const port = process.env.PORT || 3000;
 const firstParamsRoute = process.env.FIRST_PARAMS_ROUTE || "it4788";
@@ -40,7 +39,7 @@ app.get("/testfile", (req, res) => {
 app.post("/fileupload", (req, res) => {
   var form = new formidable.IncomingForm();
   form.parse(req, function (err, fields, files) {
-    console.log(files.filetoupload)
+    console.log(files.filetoupload, fields)
     var oldpath = files.filetoupload.path;
     var newpath = "upload/" + files.filetoupload.name;
     fs.rename(oldpath, newpath, function (err) {

@@ -1,5 +1,7 @@
-import jwtHelper from "../helpers/jwt.helper.js";
-import User from "../models/user.model.js";
+const jwtHelper = require("../helpers/jwt.helper.js");
+const User = require("../models/user.model.js");
+const statusCode = require("../constants/statusCode.constant.js");
+const statusMessage = require("../constants/statusMessage.constant.js");
 
 const accessTokenSecret =
   process.env.ACCESS_TOKEN_SECRET || "accessTokenSecret";
@@ -10,6 +12,7 @@ let isAuth = async (req, res, next) => {
 
   if (tokenFromClient) {
     try {
+      // if(tokenFromClient)
       const decoded = await jwtHelper.verifyToken(
         tokenFromClient,
         accessTokenSecret
@@ -22,22 +25,34 @@ let isAuth = async (req, res, next) => {
       if(!result){
         throw Error("Unauthorized. Hacker?")
       }
+      else if(result.is_blocked){
+        return res.status(401).json({
+          code: statusCode.USER_IS_NOT_VALIDATED,
+          message: statusMessage.USER_IS_NOT_VALIDATED,
+        })
+      }
       // console.log(decoded)
       req.jwtDecoded = decoded;
 
       next();
     } catch (error) {
+      console.log(error.message)
       return res.status(401).json({
-        message: "Unauthorized.",
+        code: statusCode.PARAMETER_VALUE_IS_INVALID,
+        message: statusMessage.PARAMETER_VALUE_IS_INVALID,
       });
     }
   } else {
     return res.status(403).json({
-      message: "No token provided.",
+      code: statusCode.PARAMETER_VALUE_IS_INVALID,
+      message: statusMessage.PARAMETER_VALUE_IS_INVALID,
     });
   }
-};
-
-export default {
+ };
+//this is my commets
+// No operation will do in here
+// And here
+// very useless :))))
+module.exports = {
   isAuth: isAuth,
 };

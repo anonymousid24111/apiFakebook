@@ -1,4 +1,4 @@
-import jwt from "jsonwebtoken";
+const jwt = require( "jsonwebtoken");
 
 let generateToken = (user, secretSignature, tokenLife) => {
   return new Promise((resolve, reject) => {
@@ -36,7 +36,7 @@ let verifyToken = (token, secretKey) => {
   });
 };
 
-export default {
+module.exports = {
   generateToken: generateToken,
   verifyToken: verifyToken,
 };

@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require( "mongoose");
 
 const postSchema = new mongoose.Schema({
   described: String,
@@ -6,12 +6,9 @@ const postSchema = new mongoose.Schema({
   modified: Date,
   like: Number,
   comment: Number,
-  is_liked: Number,
+  is_liked: Boolean,
   image: Array,
-  video: {
-    url: String,
-    thumb: String,
-  },
+  video: String,
   // 
   author: {
     //type: Object
@@ -31,4 +28,4 @@ const postSchema = new mongoose.Schema({
 
 const post = mongoose.model("post", postSchema, "posts");
 
-export default post;
+module.exports = post;

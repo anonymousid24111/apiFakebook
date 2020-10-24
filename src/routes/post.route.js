@@ -1,7 +1,7 @@
-import express from "express";
+const express = require( "express");
 const router = express.Router();
 
-import postController from "../controllers/post.controller.js";
+const postController = require( "../controllers/post.controller.js");
 
 router.post("/add_post", postController.addPost);
 // router.post("/signup", postController.signup);
@@ -11,4 +11,4 @@ router.post("/add_post", postController.addPost);
 // router.post("/check_verify_code", postController.checkVerifyCode);
 
 // router.post("/change_info_after_signup", postController.changeInfoAfterSignup);
-export default router;
+module.exports = router;

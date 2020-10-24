@@ -1,0 +1,50 @@
+23/10/2020
+    signup 
+    login
+    logout
+24/10/2020
+    todolist:
+        get_verify_code ?
+        check_verify_code ?
+        changeInforAfterLogin
+        add_post
+        get_post
+        edit_post
+        delete_post
+        get_comment
+        set_comment
+        report_post
+        like
+25/10/2020
+    todolist:
+        get_list_posts
+        check_new_item
+to rest:
+    search
+    get_saved_search
+    del_saved_search
+    get_user_friends
+    get_user_info
+    set_user_info
+    get_list_videos
+    get_list_blocks
+    set_block
+    set_accept_friend
+    get_requested_friends
+    set_request_friend
+    get_push_settings
+    set_push_settings
+    change_password
+    check_new_version
+    set_devtoken
+    get_conversation
+    delete_message
+    get_list_conversation
+    delete_conversation
+    get_list_suggested_friends
+    check_new_item
+    get_notification
+    set_read_message
+    set_read_notification
+
+

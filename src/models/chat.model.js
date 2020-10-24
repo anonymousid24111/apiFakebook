@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require( "mongoose");
 
 const chatSchema = new mongoose.Schema({
   idofa: String,// id
@@ -9,4 +9,4 @@ const chatSchema = new mongoose.Schema({
 
 const chat = mongoose.model("chat", chatSchema, "chats");
 
-export default chat;
+module.exports = chat;

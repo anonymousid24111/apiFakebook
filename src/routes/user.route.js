@@ -1,5 +1,5 @@
-import express from "express";
-import afterLogin from "../controllers/user.controller.js"
+const express = require( "express");
+const afterLogin = require( "../controllers/user.controller.js");
 const router = express.Router();
 
 router.get("/user", (req, res) => {// test private page
@@ -9,4 +9,4 @@ router.get("/user", (req, res) => {// test private page
 router.post("/logout", afterLogin.logout);
 router.post("/change_info_after_signup", afterLogin.changeInfoAfterSignup);
 
-export default router;
+module.exports = router;

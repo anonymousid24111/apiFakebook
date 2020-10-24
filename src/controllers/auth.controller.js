@@ -1,15 +1,13 @@
-import dotenv from "dotenv";
+const dotenv = require( "dotenv");
 dotenv.config();
-import md5 from "md5";
-import fs from "fs";
-import formidable from "formidable";
+const md5 = require( "md5");
 
-import User from "../models/user.model.js";
-import jwtHelper from "../helpers/jwt.helper.js";
-import  saveFile  from "../helpers/saveFile.helper.js";
-import * as statusCode from "./../constants/statusCode.constant.js";
-import * as statusMessage from "./../constants/statusMessage.constant.js";
-// import { isError } from "util";
+
+const User = require( "../models/user.model.js");
+const jwtHelper = require( "../helpers/jwt.helper.js");
+const statusCode = require( "./../constants/statusCode.constant.js");
+const statusMessage = require( "./../constants/statusMessage.constant.js");
+// const { isError } = require( "util");
 
 const tokenList = {};
 
@@ -166,11 +164,11 @@ const login = async (req, res) => {
 };
 
 // const refreshToken = async (req, res) => {
-//   const refreshTokenFromClient = req.body.refreshToken;
-//   if (refreshTokenFromClient && tokenList[refreshTokenFromClient]) {
+//   const refreshToken= require(Client = req.body.refreshToken;
+//   if (refreshToken= require(Client && tokenList[refreshToken= require(Client]) {
 //     try {
 //       const decoded = await jwtHelper.verifyToken(
-//         refreshTokenFromClient,
+//         refreshToken= require(Client,
 //         refreshTokenSecret
 //       );
 
@@ -245,7 +243,7 @@ const checkVerifyCode = async (req, res) => {
 
 
 
-export default {
+module.exports = {
   login,
   // refreshToken,
   signup,
