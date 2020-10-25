@@ -1,4 +1,4 @@
-const mongoose = require( "mongoose");
+const mongoose = require("mongoose");
 
 const chatSchema = new mongoose.Schema({
   idofa: String,// id
@@ -7,6 +7,6 @@ const chatSchema = new mongoose.Schema({
   date: Date,
 });
 
-const chat = mongoose.model("chat", chatSchema, "chats");
+const chat = mongoose.model("chat", chatSchema);
 
 module.exports = chat;

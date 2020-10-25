@@ -1,12 +1,12 @@
-const dotenv = require( "dotenv");
+const dotenv = require("dotenv");
 dotenv.config();
-const md5 = require( "md5");
+const md5 = require("md5");
 
 
-const User = require( "../models/user.model.js");
-const jwtHelper = require( "../helpers/jwt.helper.js");
-const statusCode = require( "./../constants/statusCode.constant.js");
-const statusMessage = require( "./../constants/statusMessage.constant.js");
+const User = require("../models/user.model.js");
+const jwtHelper = require("../helpers/jwt.helper.js");
+const statusCode = require("./../constants/statusCode.constant.js");
+const statusMessage = require("./../constants/statusMessage.constant.js");
 // const { isError } = require( "util");
 
 const tokenList = {};
@@ -78,93 +78,95 @@ const signup = async (req, res) => {
 };
 
 const login = async (req, res) => {
-    // const { phonenumber, password } = req.body; 
-    const { phonenumber, password } = req.query;// gửi bằng query params
-    if (
-      !phonenumber ||
-      phonenumber.length != 10 ||
-      phonenumber[0] != "0" ||
-      phonenumber.match(/[^0-9]/g)
-    ) {
-      // phonenumber không tồn tại, độ dài khác 10, không có số không đầu tiên,
-      // chứa kí tự không phải số
-      return res.status(200).json({
-        code: statusCode.PARAMETER_VALUE_IS_INVALID,
-        message: statusMessage.PARAMETER_VALUE_IS_INVALID,
-      });
-    } else if (
-      !password ||
-      password.length < 6 ||
-      password.length > 10 ||
-      password === phonenumber ||
-      password.match(/[^a-z|A-Z|0-9]/g)
-    ) {
-      // password không tồn tại, độ dài nhỏ hơn sáu hoặc lớn hơn 10, password giống phonenumber
-      // chứa các kí tự khác chữ thường, chữ in hoa, chữ số(Latin)
-      return res.status(200).json({
-        code: statusCode.PARAMETER_VALUE_IS_INVALID,
-        message: statusMessage.PARAMETER_VALUE_IS_INVALID,
-      });
-    } else {// nhập đúng định dạng phonenumber và password
-      // tìm dữ liệu user qua phonenumber
-      const userData = await User.findOne({
-        phonenumber: req.body.phonenumber,
-      });
-      if (userData) {
-        // tìm được user có trong hệ thống
-        const hashedPassword = md5(req.body.password);// mã hoá password
-        if (hashedPassword == userData.password) {
-          // kiểm tra password
-          // tạo token
-          const accessToken = await jwtHelper.generateToken(
-            userData,
-            accessTokenSecret,
-            accessTokenLife
-          );
-          // const refreshToken = await jwtHelper.generateToken(
-          //   userData,
-          //   refreshTokenSecret,
-          //   refreshTokenLife
-          // );
-          // lưu token tương ứng vs user, nếu đã tốn tại token thì thay thế token
-          await User.findOneAndUpdate(
-            { _id: userData._id },
-            {
-              $set: {
-                token: accessToken,
-              },
-            }
-          );
-          return res.status(200).json({
-            code: statusCode.OK,
-            message: statusMessage.OK,
-            data: {
-              id: userData._id,
-              username: userData.username,
+  // const { phonenumber, password } = req.body; 
+  const { phonenumber, password, uuid } = req.query;// gửi bằng query params
+  if (
+    !phonenumber ||
+    phonenumber.length != 10 ||
+    phonenumber[0] != "0" ||
+    phonenumber.match(/[^0-9]/g)
+  ) {
+    // phonenumber không tồn tại, độ dài khác 10, không có số không đầu tiên,
+    // chứa kí tự không phải số
+    return res.status(200).json({
+      code: statusCode.PARAMETER_VALUE_IS_INVALID,
+      message: statusMessage.PARAMETER_VALUE_IS_INVALID,
+    });
+  } else if (
+    !password ||
+    password.length < 6 ||
+    password.length > 10 ||
+    password === phonenumber ||
+    password.match(/[^a-z|A-Z|0-9]/g)
+  ) {
+    // password không tồn tại, độ dài nhỏ hơn sáu hoặc lớn hơn 10, password giống phonenumber
+    // chứa các kí tự khác chữ thường, chữ in hoa, chữ số(Latin)
+    return res.status(200).json({
+      code: statusCode.PARAMETER_VALUE_IS_INVALID,
+      message: statusMessage.PARAMETER_VALUE_IS_INVALID,
+    });
+  } else {// nhập đúng định dạng phonenumber và password
+    // tìm dữ liệu user qua phonenumber
+    const userData = await User.findOne({
+      phonenumber: phonenumber,
+    });
+    if (userData) {
+      // tìm được user có trong hệ thống
+      const hashedPassword = md5(password);// mã hoá password
+      if (hashedPassword == userData.password) {
+        // kiểm tra password
+        // tạo token
+        const accessToken = await jwtHelper.generateToken(
+          userData,
+          accessTokenSecret,
+          accessTokenLife
+        );
+        // const refreshToken = await jwtHelper.generateToken(
+        //   userData,
+        //   refreshTokenSecret,
+        //   refreshTokenLife
+        // );
+        // lưu token tương ứng vs user, nếu đã tốn tại token thì thay thế token
+        await User.findOneAndUpdate(
+          { _id: userData._id },
+          {
+            $set: {
               token: accessToken,
-              // refreshToken: refreshToken, // chưa cần dùng
-              avatar: userData.avatar,
             },
-          });
-        } else {
-          // password không hợp lệ
-          res.status(200).json({
-            code: statusCode.USER_IS_NOT_VALIDATED,
-            message: statusMessage.USER_IS_NOT_VALIDATED,
-          });
-        }
+          }
+        );
+        return res.status(200).json({
+          code: statusCode.OK,
+          message: statusMessage.OK,
+          data: {
+            id: userData._id,
+            username: userData.username,
+            token: accessToken,
+            // refreshToken: refreshToken, // chưa cần dùng
+            avatar: userData.avatar,
+          },
+        });
       } else {
-        // phonenumber chưa được đăng kí
+        // password không hợp lệ
+        console.log("password không hợp lệ")
         res.status(200).json({
           code: statusCode.USER_IS_NOT_VALIDATED,
           message: statusMessage.USER_IS_NOT_VALIDATED,
         });
       }
+    } else {
+      // phonenumber chưa được đăng kí
+      console.log("phonenumber chưa được đăng kí")
+      res.status(200).json({
+        code: statusCode.USER_IS_NOT_VALIDATED,
+        message: statusMessage.USER_IS_NOT_VALIDATED,
+      });
     }
+  }
 };
 
 // const refreshToken = async (req, res) => {
-//   const refreshToken= require(Client = req.body.refreshToken;
+//   const refreshToken= require(Client = refreshToken;
 //   if (refreshToken= require(Client && tokenList[refreshToken= require(Client]) {
 //     try {
 //       const decoded = await jwtHelper.verifyToken(

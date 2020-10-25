@@ -1,4 +1,5 @@
-const mongoose = require( "mongoose");
+const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
 
 const postSchema = new mongoose.Schema({
   described: String,
@@ -7,25 +8,25 @@ const postSchema = new mongoose.Schema({
   like: Number,
   comment: Number,
   is_liked: Boolean,
-  image: Array,
-  video: String,
-  // 
-  author: {
-    //type: Object
-    id: String,
-    name: String,
-    avatar: String,
-    online: String,
+  image: [{
+    id:  Schema.Types.ObjectId,
+    url: String,
+  }],
+  video: {
+    id:  Schema.Types.ObjectId,
+    url: String,
   },
+  // 
+  author: { type: Schema.Types.ObjectId, ref: 'user' },
   state: String,
   is_blocked: String,
   can_edit: String,
   banned: String,
   can_comment: String,
-  url: String,
-  messages: Array,
+  // url: String,
+  // messages: Array,
 });
 
-const post = mongoose.model("post", postSchema, "posts");
+const post = mongoose.model("post", postSchema);
 
 module.exports = post;

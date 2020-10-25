@@ -1,4 +1,4 @@
-const jwt = require( "jsonwebtoken");
+const jwt = require("jsonwebtoken");
 
 let generateToken = (user, secretSignature, tokenLife) => {
   return new Promise((resolve, reject) => {
@@ -6,7 +6,7 @@ let generateToken = (user, secretSignature, tokenLife) => {
       _id: user._id,
       username: user.username,
       phonenumber: user.phonenumber,
-  
+
     };
     jwt.sign(
       { data: userData },

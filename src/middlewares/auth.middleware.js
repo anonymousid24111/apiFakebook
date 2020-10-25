@@ -17,15 +17,15 @@ let isAuth = async (req, res, next) => {
         tokenFromClient,
         accessTokenSecret
       );
-      const result= await User.findOne({
+      const result = await User.findOne({
         _id: decoded.data._id,
         phonenumber: decoded.data.phonenumber,
         token: tokenFromClient,
       })
-      if(!result){
+      if (!result) {
         throw Error("Unauthorized. Hacker?")
       }
-      else if(result.is_blocked){
+      else if (result.is_blocked) {
         return res.status(401).json({
           code: statusCode.USER_IS_NOT_VALIDATED,
           message: statusMessage.USER_IS_NOT_VALIDATED,
@@ -48,7 +48,7 @@ let isAuth = async (req, res, next) => {
       message: statusMessage.PARAMETER_VALUE_IS_INVALID,
     });
   }
- };
+};
 //this is my commets
 // No operation will do in here
 // And here

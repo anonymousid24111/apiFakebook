@@ -1,5 +1,5 @@
-const express = require( "express");
-const afterLogin = require( "../controllers/user.controller.js");
+const express = require("express");
+const afterLogin = require("../controllers/user.controller.js");
 const router = express.Router();
 
 router.get("/user", (req, res) => {// test private page

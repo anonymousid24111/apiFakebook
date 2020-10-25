@@ -8,12 +8,13 @@ const Post = require("../models/post.model.js");
 const statusCode = require("./../constants/statusCode.constant.js");
 const statusMessage = require("./../constants/statusMessage.constant.js");
 const User = require("../models/user.model.js");
-const { basename } = require("path");
+const mongoose = require("mongoose")
+// const { basename } = require("path");
 // const { ifError } = require( "assert");
 
 const addPost = async (req, res) => {
   // const { token, image, video, described, status } = req.body;
-  const { token, image, video, described, status } = req.query;
+  const { token, image, video, described, state, can_edit, status } = req.query;
   const { _id, phonenumber } = req.jwtDecoded.data;
 
   // if()
@@ -30,7 +31,7 @@ const addPost = async (req, res) => {
     }
     // số lượng file lớn hơn 4
     // console.log(files.video)
-    
+
     // dung lượng video quá lớn
     if (files.video && files.video.size > 10 * 1024 * 1024) {
       await getVideoDurationInSeconds(files.video.path).then((duration) => {
@@ -48,7 +49,7 @@ const addPost = async (req, res) => {
           code: statusCode.FILE_SIZE_IS_TOO_BIG,
           message: statusCode.FILE_SIZE_IS_TOO_BIG
         })
-        
+
       }
     }
     //save posts of users
@@ -97,18 +98,19 @@ const addPost = async (req, res) => {
           console.log(error)
         }
         if (type == "jpeg" || type == "jpg" || type == "png") {
-          imageList.push(newpath);
+          imageList.push({ url: newpath });
+          console.log(imageList)
         }
         else if (type == "mp4" || type == "3pg") {
-          videoName = newpath;
-          console.log("jafkldsjlfkajsdkl",videoName)
+          videoName = { url: newpath };
+          console.log("jafkldsjlfkajsdkl", videoName)
         }
       }
     }
     try {
       var newPost = await new Post({
         described: described,
-        status: status,
+        state: state,
         image: imageList,
         video: videoName,
         created: Date.now(),
@@ -116,6 +118,7 @@ const addPost = async (req, res) => {
         like: 0,
         is_liked: false,
         comment: 0,
+        author: _id,
         // something else
       }).save()
       console.log(newPost)
@@ -123,13 +126,7 @@ const addPost = async (req, res) => {
         code: statusCode.OK,
         message: statusMessage.OK,
         data: {
-          id: newPost._id,
-          described: newPost.described,
-          created: newPost.created,
-          modified: newPost.modified,
-          like: newPost.like,
-          comment: newPost.comment,
-          is_liked: false,
+          newPost
         },
       });
 
@@ -145,16 +142,71 @@ const addPost = async (req, res) => {
 
 };
 const getPost = async (req, res) => {
-  const { token, id } = req.body;
-  return res.status(200).json({
-    code: statusCode.OK,
-    message: statusMessage.OK,
-    data: {
-      id: "id",
-    },
-  });
+  const { token, id } = req.query;
+  const { _id } = req.jwtDecoded.data;
+  if (!id) {
+    return res.status(200).json({
+      code: statusCode.PARAMETER_VALUE_IS_INVALID,
+      message: statusMessage.PARAMETER_VALUE_IS_INVALID,
+    })
+  }
+  else {
+    try {
+      // tim bai viet
+      var result = await Post.findById(id).populate({
+        path: "author",
+        select: "_id username avatar"
+      });
+      console.log(result);
+    } catch (error) {
+      return res.status(200).json({
+        code: statusCode.POST_IS_NOT_EXISTED,
+        message: statusMessage.POST_IS_NOT_EXISTED
+      })
+    }
+    if (!result) {// không tìm thấy bài viết hoặc vi phạm tiêu chuẩn cộng đồng
+      return res.status(200).json({
+        code: statusCode.POST_IS_NOT_EXISTED,
+        message: statusMessage.POST_IS_NOT_EXISTED
+      })
+    } else {
+      // console.log(result.author._id, _id)
+      var resultUser = await User.findById(result.author._id);
+      var block = false;
+      // tìm người dùng có trong danh sách block của author hay không
+      await resultUser.blockedIds.forEach(element => {
+        if (element == _id) {
+          block = true;
+        }
+      });
+      if (block) {
+        return res.status(200).json({
+          code: statusCode.OK,
+          message: statusMessage.OK,
+          data: {
+            isblocked: 1
+          }
+        })
+      } else {
+        return res.status(200).json({
+          code: statusCode.OK,
+          message: statusMessage.OK,
+          data: result
+        })
+      }
+    }
+  }
 };
+
+const editPost = async (req, res) => {
+  const { token, id, described, status, state, image, image_del,
+    image_sort, video, thumb, auto_block, auto_accept } = req.query;
+  // doing
+  return res.status(200)
+}
 
 module.exports = {
   addPost,
+  getPost,
+  editPost
 };

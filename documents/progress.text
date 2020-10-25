@@ -6,8 +6,8 @@
     todolist:
         get_verify_code ?
         check_verify_code ?
-        changeInforAfterLogin
-        add_post
+        changeInforAfterLogin done
+        add_post done
         get_post
         edit_post
         delete_post

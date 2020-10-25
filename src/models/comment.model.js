@@ -1,4 +1,4 @@
-const mongoose = require( "mongoose");
+const mongoose = require("mongoose");
 
 const commentSchema = new mongoose.Schema({
   author: String,// id
@@ -6,6 +6,6 @@ const commentSchema = new mongoose.Schema({
   date: Date,
 });
 
-const comment = mongoose.model("comment", commentSchema, "comments");
+const comment = mongoose.model("comment", commentSchema);
 
 module.exports = comment;

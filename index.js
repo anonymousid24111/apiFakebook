@@ -1,21 +1,21 @@
 require("dotenv").config();
 
-const express = require( "express");
-const bodyParser = require( "body-parser");
-const formidable = require( "formidable");
-const fs = require( "fs");
+const express = require("express");
+const bodyParser = require("body-parser");
+const formidable = require("formidable");
+const fs = require("fs");
 // const cookieParser = require( 'cookie-parser'
-const mongoose = require( "mongoose");
-mongoose.connect(process.env.MONGO_URL || "mongodb://localhost/apiFakebook", {
+const mongoose = require("mongoose");
+mongoose.connect(process.env.MONGO_URL || "mongodb://localhost/ungdungdanentang", {
   useUnifiedTopology: true,
   useNewUrlParser: true,
 });
 
-const userRoute = require( "./src/routes/user.route.js");
-const authRoute = require( "./src/routes/auth.route.js");
-const postRoute = require( "./src/routes/post.route.js");
+const userRoute = require("./src/routes/user.route.js");
+const authRoute = require("./src/routes/auth.route.js");
+const postRoute = require("./src/routes/post.route.js");
 
-const authMiddleware = require( "./src/middlewares/auth.middleware.js");
+const authMiddleware = require("./src/middlewares/auth.middleware.js");
 
 const port = process.env.PORT || 3000;
 const firstParamsRoute = process.env.FIRST_PARAMS_ROUTE || "it4788";
