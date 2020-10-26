@@ -8,13 +8,13 @@
         check_verify_code ?
         changeInforAfterLogin done
         add_post done
-        get_post
-        edit_post
-        delete_post
+        get_post done
+        edit_post doing***************
+        delete_post done
         get_comment
         set_comment
-        report_post
-        like
+        report_post done
+        like doing*
 25/10/2020
     todolist:
         get_list_posts

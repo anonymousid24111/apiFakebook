@@ -6,6 +6,7 @@ const userSchema = new mongoose.Schema({
   password: String,
   avatar: String,
   token: String,
+  is_blocked: String,
   blockedIds: [{
     type: Schema.Types.ObjectId,
     ref: "user"

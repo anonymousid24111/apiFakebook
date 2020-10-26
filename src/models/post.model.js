@@ -7,7 +7,15 @@ const postSchema = new mongoose.Schema({
   modified: Date,
   like: Number,
   comment: Number,
+  comment_list: [{
+    type: Schema.Types.ObjectId,
+    ref: "comment",
+  }],
   is_liked: Boolean,
+  like_list: [{
+    type: Schema.Types.ObjectId,
+    ref: "user",
+  }],
   image: [{
     id:  Schema.Types.ObjectId,
     url: String,
