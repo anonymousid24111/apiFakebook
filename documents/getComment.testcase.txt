@@ -87,16 +87,14 @@
     dùng
     Kết quả mong đợi: server báo về cho client. Ứng dụng phát hiện ra việc chặn, thực hiện ẩn
     popup bình luận, xóa bài viết khỏi danh sách
-
-
-
-
-    doing herr&*&*&*********&&&&&&&&&&&&&&&&&&&&&*
-
-
-
+    output:
+        code: notaccess
+        message: notaccess
     12. Người dùng truyền đúng mã phiên đăng nhập, id bài viết cũng như các tham số khác.
     Nhưng trong quá trình xem bình luận thì hệ thống nhận yêu cầu (của một trong số những người
     tham gia bình luận) chặn người dùng
     Kết quả mong đợi: từ đấy trở đi, server không gửi về các bình luận của người chủ động
     chặn. Bình luận khác (đã hiện ở client) vẫn tạm cho hiển thị nốt lần đó.
+    output:
+        code: notaccess
+        message: notaccess
