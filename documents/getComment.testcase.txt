@@ -15,7 +15,7 @@
             created
             poster
                 id
-                name 
+                name ? username
                 avatar
             is_blocked
     2. Người dùng gửi sai mã phiên đăng nhập (mã bị trống hoặc quá ngắn hoặc mã phiên

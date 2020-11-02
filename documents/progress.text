@@ -7,8 +7,8 @@
         get_verify_code ?
         check_verify_code ?
         changeInforAfterLogin done
-        add_post done
-        get_post done
+        add_post done m// fix catch
+        get_post done  // fix catch
         edit_post doing***************
         delete_post done
         get_comment

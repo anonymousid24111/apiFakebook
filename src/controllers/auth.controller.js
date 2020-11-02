@@ -101,7 +101,7 @@ const signup = async (req, res) => {
   }
 
 };
-
+//doing here
 const login = async (req, res) => {
   const { phonenumber, password, uuid } = req.query;// gửi bằng query params
 
@@ -170,11 +170,19 @@ const login = async (req, res) => {
       }
     }
   } catch (error) {
-    console.log(error)
-    res.status(200).json({
-      code: statusCode.UNKNOWN_ERROR,
-      message: statusMessage.UNKNOWN_ERROR,
-    });
+    if (error.message == "PARAMETER_VALUE_IS_INVALID") {
+      console.log(error)
+      return res.status(200).json({
+        code: statusCode.PARAMETER_VALUE_IS_INVALID,
+        message: statusMessage.PARAMETER_VALUE_IS_INVALID,
+      });
+    } else {
+      console.log(error)
+      return res.status(200).json({
+        code: statusCode.UNKNOWN_ERROR,
+        message: statusMessage.UNKNOWN_ERROR,
+      });
+    }
   }
 
 };

@@ -185,7 +185,10 @@ const getPost = async (req, res) => {
       })
     }
     else {
-
+      return res.status(200).json({
+        code: statusCode.UNKNOWN_ERROR,
+        message: statusMessage.UNKNOWN_ERROR
+      })
     }
   }
 };
@@ -236,46 +239,46 @@ const deletePost = async (req, res) => {
 const reportPost = async (req, res) => {
   const { token, id, subject, details } = req.query;
   try {
-    var result = await Post.findById(id);
+    var result = await Post.findById(id, (err, docs) => {
+      if (err) throw err;
+    });
     if (!result) {
-      console.log("Khong tim thay bai viet")
+      throw Error("notfound");
+    }
+    else if (result.is_blocked) {
+      throw Error("blocked")
+    }
+    else {
+      await new ReportPost({
+        id: id,
+        subject: subject,
+        details: details,
+      }).save()
+      return res.status(200).json({
+        code: statusCode.OK,
+        message: statusMessage.OK
+      })
+    }
+  } catch (error) {
+    if (error.message == "notfound") {
       return res.status(200).json({
         code: statusCode.POST_IS_NOT_EXISTED,
         message: statusMessage.POST_IS_NOT_EXISTED,
       })
-    } else {
-      if (result.is_blocked) {
-        return res.status(200).json({
-          code: statusCode.ACTION_HAS_BEEN_DONE_PREVIOUSLY_BY_THIS_USER,
-          message: statusMessage.ACTION_HAS_BEEN_DONE_PREVIOUSLY_BY_THIS_USER,
-        })
-      }
-      else {
-        try {
-          await new ReportPost({
-            id: id,
-            subject: subject,
-            details: details,
-          }).save()
-          return res.status(200).json({
-            code: statusCode.OK,
-            message: statusMessage.OK
-          })
-        } catch (error) {
-          return res.status(200).json({
-            code: statusCode.UNKNOWN_ERROR,
-            message: statusMessage.UNKNOWN_ERROR
-          })
-        }
-      }
     }
-  } catch (error) {
-    return res.status(200).json({
-      code: statusCode.POST_IS_NOT_EXISTED,
-      message: statusMessage.POST_IS_NOT_EXISTED,
-    })
+    else if (error.message == "blocked") {
+      return res.status(200).json({
+        code: statusCode.ACTION_HAS_BEEN_DONE_PREVIOUSLY_BY_THIS_USER,
+        message: statusMessage.ACTION_HAS_BEEN_DONE_PREVIOUSLY_BY_THIS_USER,
+      })
+    }
+    else {
+      return res.status(200).json({
+        code: statusCode.UNKNOWN_ERROR,
+        message: statusMessage.UNKNOWN_ERROR,
+      })
+    }
   }
-  // return res.status(200)
 }
 
 const like = async (req, res) => {
@@ -285,36 +288,25 @@ const like = async (req, res) => {
   try {
     // tim post theo id
     var result = await Post.findById(id, (err, docs) => {
-      if (err) {
-        throw err;
-      }
+      if (err) throw err;
     });
     // neu khong co thi bao loi
     if (!result) {
       throw Error("notfound");
     }
-    var isliked = "0";
     // kiem tra post có bị block không
     if (result.is_blocked) {
       throw Error("isblocked")
     }
-    // kiểm tra xem user đã like bài viết này chưa
-    await result.like_list.forEach(element => {
-      if (element == _id) {
-        isliked = "1";
-      }
-    });
     // nếu user đã like
-    if (isliked == "1") {
+    if (!result.like_list.includes(_id)) {
       // xoá user id khỏi danh sách đã like của post
       await Post.findByIdAndUpdate(id, {
         $pull: {
           like_list: _id
         }
       }, (err, docs) => {
-        if (err) {
-          throw err;
-        }
+        if (err) throw err;
       })
       return res.status(200).json({
         code: statusCode.OK,
@@ -323,9 +315,7 @@ const like = async (req, res) => {
           like: result.like - 1
         }
       }, (err, docs) => {
-        if (err) {
-          throw err;
-        }
+        if (err) throw err;
       })
     } else {
       // nếu user chưa like thì thêm user id vào danh sách post
@@ -334,9 +324,7 @@ const like = async (req, res) => {
           like_list: _id
         }
       }, (err, docs) => {
-        if (err) {
-          throw err;
-        }
+        if (err) throw err;
       })
       return res.status(200).json({
         code: statusCode.OK,
@@ -386,6 +374,10 @@ const getComment = async (req, res) => {
       if (err) throw err;
     }).populate({
       path: "comment_list",
+      populate: {
+        path: "poster",
+        select: "_id username avatar"
+      }
     });
     if (!postData) {
       // neu bai viet khong ton tai
@@ -397,41 +389,42 @@ const getComment = async (req, res) => {
     } else {
       // neu khong co loi gi
       // kiem tra author bai viet cos block user khong
-      var authorData= await User.findOne({_id: postData.author}, (err, docs)=>{
+      var authorData = await User.findOne({ _id: postData.author }, (err, docs) => {
         if (err) throw err;
       });
-      authorData.blockedIds.forEach((element)=>{
-        if(element==_id){
+      authorData.blockedIds.forEach((element) => {
+        if (element == _id) {
           throw Error("authorblock");
         }
       })
       // kiểm tra user có block author bai viet không
-      var userData= await User.findOne({_id: _id}, (err, docs)=>{
+      var userData = await User.findOne({ _id: _id }, (err, docs) => {
         if (err) throw err;
       });
-      userData.blockedIds.forEach((element)=>{
-        if(element==postData.author){
+      userData.blockedIds.forEach((element) => {
+        if (element == postData.author) {
           throw Error("userblock");
         }
       });
       // nếu all ok
-      postData.comment_list.forEach(async element=>{
+
+      var comment_list = postData.comment_list.filter(async element => {
         // kiểm tra author comment có block user không
-        var userDataComment = await User.findOne({_id: element.author}, (err, docs)=>{
+        var authorDataComment = await User.findOne({ _id: element.author }, (err, docs) => {
           if (err) throw err;
         });
-        // userDataComment.blockedIds.forEach(element=>{
-        //   //
-        // })
-
+        // var flag = true;
+        if (!authorDataComment.blockedIds.includes(_id) || !userData.blockedIds.includes(element.author)) {
+          return false;
+        } else {
+          return true;
+        }
       })
 
       res.status(200).json({
         code: statusCode.OK,
         message: statusMessage.OK,
-        data:{
-          like: 1
-        }
+        data: comment_list,
       })
     }
   } catch (err) {
@@ -456,14 +449,14 @@ const getComment = async (req, res) => {
         message: statusMessage.ACTION_HAS_BEEN_DONE_PREVIOUSLY_BY_THIS_USER
       })
     }
-    else if(err.message == "authorblock"){
+    else if (err.message == "authorblock") {
       console.log("authorblock");
       return res.status(200).json({
         code: statusCode.NOT_ACCESS,
         message: statusMessage.NOT_ACCESS
       })
     }
-    else if(err.message == "userblock"){
+    else if (err.message == "userblock") {
       console.log("userblock");
       return res.status(200).json({
         code: statusCode.NOT_ACCESS,
@@ -479,122 +472,105 @@ const getComment = async (req, res) => {
     }
   }
 
-  res.status(200)
+  // res.status(200)
 }
 
 const setComment = async (req, res) => {
   const { token, id, comment, index, count } = req.query;
+  const { _id } = req.jwtDecoded.data;
   // check params
-  if (!comment || !id || !index || !count) {
-    console.log("params error");
-    return res.status(200).json({
-      code: statusCode.PARAMETER_VALUE_IS_INVALID,
-      message: statusMessage.PARAMETER_VALUE_IS_INVALID,
-    })
-  } else {// params OK
-    const { _id } = req.jwtDecoded.data;
-    try {
-      // tim bai viet
-      var result = await Post.findOne({ _id: id }, (err, docs) => {
-        if (err) {
-          throw err;
-        }
-      })
-      // tim author
-      var userData = await User.findOne({ _id: result.author }, (err, docs) => {
-        if (err) {
-          throw err;
-        }
-      });
-      var isblocked = "0";
-      // tim author co block user k
-      await userData.blockedIds.forEach((element) => {
-        if (element == _id) {
-          isblocked = "1"
-        }
-      })
-      if (isblocked == "1") {// neu author block user
-        console.log("author blocked you");
-        return res.status(200).json({
-          code: statusCode.NOT_ACCESS,
-          message: statusMessage.NOT_ACCESS,
-        })
-      }
-      // tim user co block user k
-      await userData.blockedIds.forEach((element) => {
-        if (element == _id) {
-          isblocked = "1"
-        }
-      })
-      if (isblocked == "1") {// neu author block user
-        console.log("author blocked you");
-        return res.status(200).json({
-          code: statusCode.NOT_ACCESS,
-          message: statusMessage.NOT_ACCESS,
-        })
-      }
-      if (!result) {// neu ko tim thay bai viet
-        console.log("not found");
-        return res.status(200).json({
-          code: statusCode.POST_IS_NOT_EXISTED,
-          message: statusMessage.POST_IS_NOT_EXISTED,
-        })
-      }
-      else if (result.is_blocked == "1") {// neu bai biet bi block boi server
-        console.log("this post is blocked by server");
-        return res.status(200).json({
-          code: statusCode.ACTION_HAS_BEEN_DONE_PREVIOUSLY_BY_THIS_USER,
-          message: statusMessage.ACTION_HAS_BEEN_DONE_PREVIOUSLY_BY_THIS_USER,
-        });
-      }
-      else {
-        var newcomment = await new Comment({
-          // _id: mongoose.Schema.Types.ObjectId,
-          author: _id,
-          comment: comment,
-          date: Date.now(),
-        })
-        newcomment.save((err) => {
-          if (err) {
-            throw err;
-          }
-          var kq = Post.findByIdAndUpdate(id, {
-            $push: {
-              comment_list: newcomment._id
-            }
-          }, (err2, docs) => {
-            if (err2) {
-              throw err2;
-            }
-            console.log(docs)
-          })
-        });
-        console.log(newcomment)
-
-
-        return res.status(200).json({
-          code: statusCode.OK,
-          message: statusMessage.OK
-        })
-      }
-    } catch (error) {
-      if (0) {//neu k co loi
-        return res.status(200).json({
-          code: statusCode.OK,
-          message: statusMessage.OK
-        })
-      } else {
-        console.log(error.message);
-        return res.status(200).json({
-          code: statusCode.UNKNOWN_ERROR,
-          message: statusMessage.UNKNOWN_ERROR,
-        });
-      }
+  try {
+    if (!comment || !id || !index || !count) {
+      throw Error("params");
     }
-    // res.status(200)
-
+    // tim bai viet
+    var result = await Post.findOne({ _id: id }, (err, docs) => {
+      if (err) throw err;
+    })
+    // neu khong tim thay bai viet
+    if (!result) {
+      throw Error("notfound")
+    }
+    // neu bai viet bi block
+    if (result.is_blocked) {
+      throw Error("action")
+    }
+    // tim author
+    var authorData = await User.findOne({ _id: result.author }, (err, docs) => {
+      if (err) throw err;
+    });
+    if (authorData.blockedIds.includes(_id)) {
+      // neu author block user
+      throw Error("blocked");
+    }
+    // tim user co block user k
+    // tim user
+    var userData = await User.findOne({ _id: _id }, (err, docs) => {
+      if (err) throw err;
+    })
+    await userData.blockedIds.forEach((element) => {
+      if (element == _id) {
+        isblocked = "1"
+      }
+    })
+    if (userData.blockedIds.includes(result.author)) {
+      // neu author block user
+      throw Error("notaccess");
+    }
+    var newcomment = await new Comment({
+      // _id: mongoose.Schema.Types.ObjectId,
+      author: _id,
+      comment: comment,
+      date: Date.now(),
+    })
+    newcomment.save((err) => {
+      if (err) {
+        throw err;
+      }
+      var kq = Post.findByIdAndUpdate(id, {
+        $push: {
+          comment_list: newcomment._id
+        }
+      }, (err2, docs) => {
+        if (err2) {
+          throw err2;
+        }
+        console.log(docs)
+      })
+    });
+    console.log(newcomment)
+    return res.status(200).json({
+      code: statusCode.OK,
+      message: statusMessage.OK
+    })
+  } catch (error) {
+    if (error.message == "params") {
+      return res.status(200).json({
+        code: statusCode.PARAMETER_VALUE_IS_INVALID,
+        message: statusMessage.PARAMETER_VALUE_IS_INVALID
+      })
+    } else if (error.message == "notfound") {
+      return res.status(200).json({
+        code: statusCode.POST_IS_NOT_EXISTED,
+        message: statusMessage.POST_IS_NOT_EXISTED
+      })
+    } else if (error.message == "action") {
+      return res.status(200).json({
+        code: statusCode.ACTION_HAS_BEEN_DONE_PREVIOUSLY_BY_THIS_USER,
+        message: statusMessage.ACTION_HAS_BEEN_DONE_PREVIOUSLY_BY_THIS_USER
+      })
+    } else if (error.message == "blocked") {
+      return res.status(200).json({
+        code: statusCode.NOT_ACCESS,
+        message: statusMessage.NOT_ACCESS
+      })
+    } else {
+      return res.status(200).json({
+        code: statusCode.UNKNOWN_ERROR,
+        message: statusMessage.UNKNOWN_ERROR
+      })
+    }
   }
-
 }
 
 
