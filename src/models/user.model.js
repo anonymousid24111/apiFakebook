@@ -11,7 +11,11 @@ const userSchema = new mongoose.Schema({
     type: Schema.Types.ObjectId,
     ref: "user"
   }],
-  active: Number
+  active: Number,
+  friends: [{
+    type: Schema.Types.ObjectId,
+    ref: "user"
+  }],
 });
 
 const User = mongoose.model("user", userSchema);

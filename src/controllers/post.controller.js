@@ -136,6 +136,7 @@ const addPost = async (req, res) => {
 
 
 };
+
 const getPost = async (req, res) => {
   const { token, id } = req.query;
   const { _id } = req.jwtDecoded.data;
