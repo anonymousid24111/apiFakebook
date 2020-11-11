@@ -13,6 +13,7 @@ const mongoose = require("mongoose");
 mongoose.connect(process.env.MONGO_URL || "mongodb://localhost/ungdungdanentang", {
   useUnifiedTopology: true,
   useNewUrlParser: true,
+  useFindAndModify: false,
 });
 
 const userRoute = require("./src/routes/user.route.js");
@@ -21,6 +22,7 @@ const postRoute = require("./src/routes/post.route.js");
 const sixRoute = require("./src/routes/six.route.js");
 
 const authMiddleware = require("./src/middlewares/auth.middleware.js");
+const { OK } = require("./src/constants/statusCode.constant.js");
 
 const port = process.env.PORT || 3000;
 const firstParamsRoute = process.env.FIRST_PARAMS_ROUTE || "it4788";
@@ -30,8 +32,11 @@ const app = express();
 app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 
-app.get("/", (req, res) => {
-  res.write("Server ok")
+app.all("/", (req, res) => {
+  res.status(200).json({
+    code: 1000,
+    message: OK
+  })
 });
 
 app.post("/fileupload", (req, res) => {

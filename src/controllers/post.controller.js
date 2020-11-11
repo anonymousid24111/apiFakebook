@@ -31,13 +31,13 @@ const addPost = async (req, res) => {
       // dung lượng video quá lớn
       if (files.video && files.video.size > 10 * 1024 * 1024) {
         await getVideoDurationInSeconds(files.video.path).then((duration) => {
-          console.log(duration)
+          // console.log(duration)
           if (duration < 1 || duration > 10) {
             throw Error("FILE_SIZE_IS_TOO_BIG")
           }
         })
         if (files.video.size > 10 * 1024 * 1024) {
-          console.log("video vượt quá dung lượng cho phép 10MB");
+          // console.log("video vượt quá dung lượng cho phép 10MB");
           throw Error("FILE_SIZE_IS_TOO_BIG")
         }
       }
@@ -56,14 +56,14 @@ const addPost = async (req, res) => {
         if (type == "jpeg" || type == "jpg" || type == "png") {
           sizeImageFile++;
           if (sizeImageFile > 4) {
-            console.log("quá nhiều file");
+            // console.log("quá nhiều file");
             throw Error("FILE_SIZE_IS_TOO_BIG")
           }
         }
         if (type == "mp4" || type == "3pg") {
           sizeVideoFile++;
           if (sizeVideoFile > 1 || (sizeVideoFile == 1 && sizeImageFile > 0)) {
-            console.log("quá nhiều file");
+            // console.log("quá nhiều file");
             throw Error("FILE_SIZE_IS_TOO_BIG")
           }
         }
@@ -73,17 +73,22 @@ const addPost = async (req, res) => {
         if (files.hasOwnProperty(key)) {
           file = files[key];
           oldpath = file.path;
-          typeFile = file.type.split("/")[1];
-          newpath = await cloud.upload(oldpath);
+          type = file.type.split("/")[1];
+          console.log(oldpath, type)
+          
+          console.log("dden")
           if (type == "jpeg" || type == "jpg" || type == "png") {
+            newpath = await cloud.upload(oldpath);
             imageList.push({ url: newpath.url });
-            console.log(imageList)
+            // console.log(imageList)
           }
           else if (type == "mp4" || type == "3pg") {
+            newpath = await cloud.upload(oldpath, "video");
             videoName = { url: newpath.url };
           }
         }
       }
+      console.log("dden")
       // try {
       var newPost = await new Post({
         described: described,
@@ -250,12 +255,14 @@ const editPost = async (req, res) => {
           file = files[key];
           oldpath = file.path;
           typeFile = file.type.split("/")[1];
-          newpath = await cloud.upload(oldpath);
+          
           if (type == "jpeg" || type == "jpg" || type == "png") {
+            newpath = await cloud.upload(oldpath);
             imageList.push({ url: newpath.url });
             console.log(imageList)
           }
           else if (type == "mp4" || type == "3pg") {
+            newpath = await cloud.upload(oldpath, "video");
             videoName = { url: newpath.url };
           }
         }
