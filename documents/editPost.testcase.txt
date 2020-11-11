@@ -78,11 +78,12 @@
     Kết quả mong đợi: phía ứng dụng cần kiểm tra trước để báo lỗi. Nếu như lỡ
     truyền lên server thì server chỉ cho phép cập nhật các trường thông tin hợp lệ (nếu có)
     hoặc báo lỗi (nếu không có trường khác hợp lệ để cập nhật)
-    ***********doing
+    output: 
+        code: params value is invalid
     10. Có yêu cầu sửa trạng thái nhưng thông tin cần sửa không có trong danh sách trạng
     thái bài viết hợp lệ của ứng dụng
     Kết quả mong đợi: phía ứng dụng cần kiểm tra trước để báo lỗi. Nếu như lỡ
     truyền lên server thì server chỉ cho phép cập nhật các trường thông tin hợp lệ (nếu có)
     hoặc báo lỗi (nếu không có trường khác hợp lệ để cập nhật)
-    ***********doing
+    ***********doing 
 

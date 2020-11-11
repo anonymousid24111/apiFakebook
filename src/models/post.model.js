@@ -24,6 +24,10 @@ const postSchema = new mongoose.Schema({
     id:  Schema.Types.ObjectId,
     url: String,
   },
+  thumb: [{
+    id:  Schema.Types.ObjectId,
+    url: String,
+  }],
   // 
   author: { type: Schema.Types.ObjectId, ref: 'user' },
   state: String,

@@ -1,7 +1,7 @@
 const fs = require("fs");
 const formidable = require("formidable");
 
-const saveFile = require("../helpers/saveFile.helper.js");
+const cloud = require("../helpers/cloud.helper.js");
 
 const User = require("../models/user.model.js");
 
@@ -62,15 +62,14 @@ const changeInfoAfterSignup = async (req, res) => {
             console.log("File không đúng định dạng");
             throw Error("FILE_SIZE_IS_TOO_BIG");
           }
-          const newpath = `upload/avatar.${_id}${Date.now()}.${typeFile}`; //tạo đường dẫn mới cho ảnh được upload
-          await saveFile.saveFile(oldpath, newpath); //lưu và đổi tên file
+          const result = await cloud.upload(oldpath); //lưu và đổi tên file
           const timeCurrent = Date.now();
 
           // update tên user và đường dẫn avatar, thời gian sửa đổi
           const userData = await User.findByIdAndUpdate(_id, {
             $set: {
               username: fields.username,
-              avatar: newpath,
+              avatar: result.url,
               created: timeCurrent
             },
           }, (err, docs) => {
@@ -86,7 +85,7 @@ const changeInfoAfterSignup = async (req, res) => {
               username: fields.username,
               phonenumber: phonenumber,
               created: timeCurrent,
-              avatar: newpath,
+              avatar: result.url,
             },
           });
         }

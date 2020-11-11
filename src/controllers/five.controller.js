@@ -10,7 +10,7 @@ const User = require("../models/user.model.js");
 const ReportPost = require("../models/report.post.model.js");
 const Comment = require("../models/comment.model")
 
-const saveFile = require("../helpers/saveFile.helper.js");
+const cloud = require("../helpers/cloud.helper.js");
 
 const statusCode = require("../constants/statusCode.constant.js");
 const statusMessage = require("../constants/statusMessage.constant.js");
@@ -73,6 +73,24 @@ const checkNewItem = async (req, res)=>{
     if(!last_id||!category_id){
       throw Error("params")
     }
+    var postData = Post.find({}, (err, docs=>{
+      if (err) throw err;
+    })).sort({created: 1});
+    var dataRes = [];
+    // (await postData).forEach((element)=>{
+    //   if(postData._id==element){
+    //     // break;
+    //   }
+    //   else{
+    //     dataRes.push(element);
+    //   }
+    // })
+    return res.status(200).json({
+      code: statusCode.OK,
+      message: statusMessage.OK,
+      data: dataRes,
+    })
+
   } catch (error) {
     if (error.message== "params") {
       return res.status(200).json({

@@ -1,6 +1,6 @@
 const dotenv = require("dotenv");
 dotenv.config();
-const fs = require("fs");
+// const fs = require("fs");
 const formidable = require("formidable");
 const { getVideoDurationInSeconds } = require('get-video-duration')
 const mongoose = require("mongoose");
@@ -10,7 +10,7 @@ const User = require("../models/user.model.js");
 const ReportPost = require("../models/report.post.model.js");
 const Comment = require("../models/comment.model")
 
-const saveFile = require("../helpers/saveFile.helper.js");
+const cloud = require("../helpers/cloud.helper.js");
 
 const statusCode = require("./../constants/statusCode.constant.js");
 const statusMessage = require("./../constants/statusMessage.constant.js");
@@ -23,14 +23,11 @@ const addPost = async (req, res) => {
   try {
     const form = new formidable.IncomingForm();
     form.parse(req, async (err, fields, files) => {
-      // console.log(files)
       if (err) {
         console.log("có lỗi không xác định", err);
         throw err;
       }
       // số lượng file lớn hơn 4
-      // console.log(files.video)
-
       // dung lượng video quá lớn
       if (files.video && files.video.size > 10 * 1024 * 1024) {
         await getVideoDurationInSeconds(files.video.path).then((duration) => {
@@ -77,15 +74,13 @@ const addPost = async (req, res) => {
           file = files[key];
           oldpath = file.path;
           typeFile = file.type.split("/")[1];
-          newpath = `upload/post.${_id}${Date.now()}.${typeFile}`;
-          await saveFile.saveFile(oldpath, newpath);
+          newpath = await cloud.upload(oldpath);
           if (type == "jpeg" || type == "jpg" || type == "png") {
-            imageList.push({ url: newpath });
+            imageList.push({ url: newpath.url });
             console.log(imageList)
           }
           else if (type == "mp4" || type == "3pg") {
-            videoName = { url: newpath };
-            console.log("jafkldsjlfkajsdkl", videoName)
+            videoName = { url: newpath.url };
           }
         }
       }
@@ -111,11 +106,6 @@ const addPost = async (req, res) => {
           newPost
         },
       });
-
-      // } catch (error) {
-
-      // }
-      //save data what user send
     });
 
   } catch (error) {
@@ -150,7 +140,7 @@ const getPost = async (req, res) => {
         select: "_id username avatar"
       });
       console.log(result);
-      if (!result) {// không tìm thấy bài viết hoặc vi phạm tiêu chuẩn cộng đồng
+      if (!result || result.is_blocked) {// không tìm thấy bài viết hoặc vi phạm tiêu chuẩn cộng đồng
         throw Error("POST_IS_NOT_EXISTED")
       } else {
         var resultUser = await User.findById(result.author._id);
@@ -197,8 +187,134 @@ const getPost = async (req, res) => {
 const editPost = async (req, res) => {
   const { token, id, described, status, state, image, image_del,
     image_sort, video, thumb, auto_block, auto_accept } = req.query;
-  // doing
-  return res.status(200)
+  try {
+    if (!id||
+      (described&&described.length>500)||
+      (image_del&&image_del.length>4)||
+      (image_sort&&image_sort.length>4)) {
+      throw Error("params")
+    }
+    const postData = await Post.findById(id, (err, docs)=>{
+      if (err) throw err;
+    })
+    const form = new formidable.IncomingForm();
+    form.parse(req, async (err, fields, files)=>{
+      if (err) throw err;
+      if ((files.video&&(postData.image&&postData.image.length>0))||
+      (files.image&&(postData.image&&postData.image.length>0))){
+        throw Error("params")
+      }
+      // nếu có video
+      if (files.video && files.video.size > 10 * 1024 * 1024) {
+        await getVideoDurationInSeconds(files.video.path).then((duration) => {
+          if (duration < 1 || duration > 10) {
+            throw Error("FILE_SIZE_IS_TOO_BIG")
+          }
+        })
+        if (files.video.size > 10 * 1024 * 1024) {
+          throw Error("FILE_SIZE_IS_TOO_BIG")
+        }
+      }
+
+      //upload
+      var oldpath = "";
+      var newpath = "";
+      var typeFile = "";
+      var imageList = [];
+      var file = "";
+      var sizeImageFile = 0;
+      var sizeVideoFile = 0;
+      var type = "";
+      var videoName = "";
+      // đếm số file ảnh và số file video
+      for (const key in files) {
+        type = files[key].type.split("/")[1];
+        if (type == "jpeg" || type == "jpg" || type == "png") {
+          sizeImageFile++;
+          if (sizeImageFile > 4) {
+            console.log("quá nhiều file");
+            throw Error("FILE_SIZE_IS_TOO_BIG")
+          }
+        }
+        if (type == "mp4" || type == "3pg") {
+          sizeVideoFile++;
+          if (sizeVideoFile > 1 || (sizeVideoFile == 1 && sizeImageFile > 0)) {
+            console.log("quá nhiều file");
+            throw Error("FILE_SIZE_IS_TOO_BIG")
+          }
+        }
+      }
+      // duyệt từng files
+      for (const key in files) {
+        if (files.hasOwnProperty(key)) {
+          file = files[key];
+          oldpath = file.path;
+          typeFile = file.type.split("/")[1];
+          newpath = await cloud.upload(oldpath);
+          if (type == "jpeg" || type == "jpg" || type == "png") {
+            imageList.push({ url: newpath.url });
+            console.log(imageList)
+          }
+          else if (type == "mp4" || type == "3pg") {
+            videoName = { url: newpath.url };
+          }
+        }
+      }
+      var updateData = {};
+      if(described){
+        updateData.described = described;
+      }
+      if(status){
+        updateData.status = status;
+      }
+      if(state){
+        updateData.state = state;
+      }
+      if(video){
+        updateData.video = videoName;
+      }
+      if(imageList&&imageList.length>0){
+        updateData.image = imageList;
+      } else if(image_sort&&image_sort.length>0){
+        updateData.image = image_sort;
+      }
+      
+      if(image_del&&image_del.length>0){
+        image_del.forEach(async (element)=>{
+          await Post.findByIdAndUpdate(id, {
+            $pull: {
+              image: {
+                _id: element
+              }
+            }
+          }, err=>{
+            if (err) throw err;
+          })
+        })
+      } 
+      await Post.findByIdAndUpdate(id, updateData, err=>{
+        if (err) throw err;
+      })
+
+    })
+  } catch (error) {
+    if (error.message=="params") {
+      return res.status(200).json({
+        code: statusCode.PARAMETER_VALUE_IS_INVALID,
+        message: statusMessage.PARAMETER_VALUE_IS_INVALID
+      })
+    } else if (error.message=="FILE_SIZE_IS_TOO_BIG") {
+      return res.status(200).json({
+        code: statusCode.FILE_SIZE_IS_TOO_BIG,
+        message: statusMessage.FILE_SIZE_IS_TOO_BIG
+      })
+    } else {
+      return res.status(200).json({
+        code: statusCode.UNKNOWN_ERROR,
+        message: statusMessage.UNKNOWN_ERROR
+      })
+    }
+  }
 }
 
 const deletePost = async (req, res) => {
