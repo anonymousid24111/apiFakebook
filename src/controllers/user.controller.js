@@ -54,13 +54,19 @@ const changeInfoAfterSignup = async (req, res) => {
         } else {
           if (files.avatar.size > 1024 * 1024 * 4) {
             console.log("quá 4mb dung lượng tối đa cho phép");
-            throw Error("FILE_SIZE_IS_TOO_BIG");
+            return res.status(200).json({
+              code: statusCode.FILE_SIZE_IS_TOO_BIG,
+              message: statusMessage.FILE_SIZE_IS_TOO_BIG
+            })
           }
           const oldpath = files.avatar.path;
           const typeFile = files.avatar.name.split(".")[1]; //tách lấy kiểu của file mà người dùng gửi lên
           if (!(typeFile == "jpg" || typeFile == "jpeg" || typeFile == "png")) { //không đúng định dạng
             console.log("File không đúng định dạng");
-            throw Error("FILE_SIZE_IS_TOO_BIG");
+            return res.status(200).json({
+              code: statusCode.FILE_SIZE_IS_TOO_BIG,
+              message: statusMessage.FILE_SIZE_IS_TOO_BIG
+            })
           }
           const result = await cloud.upload(oldpath); //lưu và đổi tên file
           const timeCurrent = Date.now();
@@ -68,7 +74,7 @@ const changeInfoAfterSignup = async (req, res) => {
           // update tên user và đường dẫn avatar, thời gian sửa đổi
           const userData = await User.findByIdAndUpdate(_id, {
             $set: {
-              username: fields.username,
+              username: username,
               avatar: result.url,
               created: timeCurrent
             },
@@ -98,6 +104,11 @@ const changeInfoAfterSignup = async (req, res) => {
       return res.status(200).json({
         code: statusCode.PARAMETER_VALUE_IS_INVALID,
         message: statusMessage.PARAMETER_VALUE_IS_INVALID
+      })
+    }else if (error.message == "FILE_SIZE_IS_TOO_BIG") {
+      return res.status(200).json({
+        code: statusCode.FILE_SIZE_IS_TOO_BIG,
+        message: statusMessage.FILE_SIZE_IS_TOO_BIG
       })
     } else {
       return res.status(200).json({

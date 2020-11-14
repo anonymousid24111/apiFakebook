@@ -22,7 +22,7 @@ let upload = (path, type) => {
       .then((result) => {
         resolve(result);
       }).catch((error) => {
-        console.log(error)
+        console.log("ahihi",error)
         reject(err);
       });
     }
