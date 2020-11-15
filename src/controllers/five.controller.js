@@ -23,30 +23,18 @@ const getListPosts = async (req, res) => {
     if (!index || !count || !latitude || !longitude) {
       throw Error("params");
     }
-    // mo ta
-    // 
-    // tìm danh sách bạn 
-    // tìm tất cả bài viết của các bạn của user sắp xếp theo created lấy count 
-    // test populate or query loop
-
-    // 
-
-    // var userData = await User.findById(_id, (err, docs)=>{
-    //   if (err) throw err;
-    // }).populate({
-    //   path: "friends",
-    //   populate: {
-    //     path: "post"
-    //   }
-    // })
-    // doing here
-    // chưa làm đc tìm tạm 20 bài trong database
-    var postData = await Post.find({}, (err, docs) => {
-      if (err) throw err;
+    var result = await User.findById(_id).populated({
+      path: "friends",
+      select: "postIds",
+      populate: {
+        path: "postIds"
+      }
     }).limit(count).sort({ created: 1 });
-    if (!postData) {
-      throw Error("nodata");
-    }
+    return res.status(200).json({
+      code: statusCode.OK,
+      message: statusMessage.OK,
+      data: result
+    })
   } catch (error) {
     if (error.message == "params") {
       return res.status(200).json({

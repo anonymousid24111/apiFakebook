@@ -23,23 +23,28 @@ const search = async (req, res) => {
         if (!index || !count || !user_id|| !keyword) {
             throw Error("params");
         }
+        await User.findByIdAndUpdate(_id,{
+            $push:{
+                savedSearch: {
+                    keyword: keyword,
+                    created: Date.now(),
+                }
+            }
+        })
         // mo ta
         // 
         // Ưu tiên đứng đầu danh sách là các kết quả có chứa đủ các từ và đúng thứ tự
-        // var postData1 = Post.find({ described: keyword}, (err, docs)=>{
-        //     if (err) throw err;
-        // });
-        //Tiếp theo là các kết quả đủ từ nhưng không đúng thứ tự
-        // var postData1 = Post.find({ described: keyword}, (err, docs)=>{
-        //     if (err) throw err;
-        // }); 
-
-        var postData = await Post.find({}, (err, docs) => {
-            if (err) throw err;
-        }).limit(count).sort({ created: 1 });
-        if (!postData) {
-            throw Error("nodata");
-        }
+        // var postData1 =await Post.find({ described: new RegExp(keyword, "i") });
+        // Tiếp theo là các kết quả đủ từ nhưng không đúng thứ tự
+        var postData1 =await Post.find({$or: [
+            { described: new RegExp(keyword, "i") },
+            { described: new RegExp(keyword.replace(" ", "|"), "i") }
+        ]});
+        return res.status(200).json({
+            code: statusCode.OK,
+            message: statusMessage.OK,
+            data: postData1
+        })
     } catch (error) {
         if (error.message == "params") {
             return res.status(200).json({
@@ -61,30 +66,22 @@ const search = async (req, res) => {
 }
 
 const getSavedSearch = async (req, res) => {
-    const { token, user_id, keyword, index, count } = req.query;
+    const { token, index, count } = req.query;
     const { _id } = req.jwtDecoded.data;
     // check params
     try {
-        if (!index || !count || !user_id|| !keyword) {
+        if (!index || !count ) {
             throw Error("params");
         }
-        // mo ta
-        // 
-        // Ưu tiên đứng đầu danh sách là các kết quả có chứa đủ các từ và đúng thứ tự
-        // var postData1 = Post.find({ described: keyword}, (err, docs)=>{
-        //     if (err) throw err;
-        // });
-        //Tiếp theo là các kết quả đủ từ nhưng không đúng thứ tự
-        // var postData1 = Post.find({ described: keyword}, (err, docs)=>{
-        //     if (err) throw err;
-        // }); 
-
-        var postData = await Post.find({}, (err, docs) => {
-            if (err) throw err;
-        }).limit(count).sort({ created: 1 });
-        if (!postData) {
+        var userData = await User.findById(_id);
+        if (!userData) {
             throw Error("nodata");
         }
+        return res.status(200).json({
+            code: statusCode.OK,
+            message: statusMessage.OK,
+            data: userData.savedSearch.slice(index, index+count)
+        })
     } catch (error) {
         if (error.message == "params") {
             return res.status(200).json({
@@ -104,30 +101,37 @@ const getSavedSearch = async (req, res) => {
         }
     }
 }
+
 const delSavedSearch = async (req, res) => {
-    const { token, user_id, keyword, index, count } = req.query;
+    const { token, search_id, all } = req.query;
     const { _id } = req.jwtDecoded.data;
     // check params
     try {
-        if (!index || !count || !user_id|| !keyword) {
-            throw Error("params");
+        if(all==1){
+            await User.findByIdAndUpdate(_id, {
+                $set: {
+                    savedSearch: []
+                }
+            });
+            return res.status(200).json({
+                code: statusCode.OK,
+                message: statusMessage.OK
+            })
         }
-        // mo ta
-        // 
-        // Ưu tiên đứng đầu danh sách là các kết quả có chứa đủ các từ và đúng thứ tự
-        // var postData1 = Post.find({ described: keyword}, (err, docs)=>{
-        //     if (err) throw err;
-        // });
-        //Tiếp theo là các kết quả đủ từ nhưng không đúng thứ tự
-        // var postData1 = Post.find({ described: keyword}, (err, docs)=>{
-        //     if (err) throw err;
-        // }); 
-
-        var postData = await Post.find({}, (err, docs) => {
-            if (err) throw err;
-        }).limit(count).sort({ created: 1 });
-        if (!postData) {
-            throw Error("nodata");
+        else if (all==0&&search_id) {
+            await User.findByIdAndUpdate(_id,{
+                $pull:{
+                    savedSearch:{
+                        _id: search_id
+                    }
+                }
+            });
+            return res.status(200).json({
+                code: statusCode.OK,
+                message: statusMessage.OK
+            })
+        } else {
+            throw Error("params");
         }
     } catch (error) {
         if (error.message == "params") {

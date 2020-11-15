@@ -1,9 +1,9 @@
 const dotenv = require("dotenv");
 dotenv.config();
 // const fs = require("fs");
-const formidable = require("formidable");
-const { getVideoDurationInSeconds } = require("get-video-duration");
-const mongoose = require("mongoose");
+// const formidable = require("formidable");
+// const { getVideoDurationInSeconds } = require("get-video-duration");
+// const mongoose = require("mongoose");
 
 const Post = require("../models/post.model.js");
 const User = require("../models/user.model.js");
@@ -42,6 +42,11 @@ const addPost = async (req, res) => {
               comment: 0,
               author: _id,
             }).save();
+            await User.findOneAndUpdate({_id: _id}, {
+              $push: {
+                postIds: newPost._id
+              }
+            })
             return res.status(200).json({
               code: statusCode.OK,
               message: statusMessage.OK,
@@ -598,6 +603,7 @@ const setComment = async (req, res) => {
       created: Date.now(),
     });
     result.comment_list.push(newcomment._id);
+    result.comment++;
     await result.save();
     await newcomment.save();
     console.log(newcomment);
