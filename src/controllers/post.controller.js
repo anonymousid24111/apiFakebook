@@ -396,16 +396,14 @@ const like = async (req, res) => {
     // nếu user đã like
     if (result.like_list.includes(String(_id))) {
       // xoá user id khỏi danh sách đã like của post
-      await Post.findByIdAndUpdate(
-        id,
-        {
-          $pull: {
-            like_list: _id,
-          },
-          $set: {
-            like: result.like - 1,
-          }
-        });
+      await Post.findByIdAndUpdate(id, {
+        $pull: {
+          like_list: _id,
+        },
+        $set: {
+          like: result.like - 1,
+        },
+      });
       return res.status(200).json({
         code: statusCode.OK,
         message: statusMessage.OK,
@@ -415,16 +413,14 @@ const like = async (req, res) => {
       });
     } else {
       // nếu user chưa like thì thêm user id vào danh sách post
-      await Post.findByIdAndUpdate(
-        id,
-        {
-          $push: {
-            like_list: _id,
-          },
-          $set: {
-            like: result.like + 1
-          }
-        });
+      await Post.findByIdAndUpdate(id, {
+        $push: {
+          like_list: _id,
+        },
+        $set: {
+          like: result.like + 1,
+        },
+      });
       return res.status(200).json({
         code: statusCode.OK,
         message: statusMessage.OK,
@@ -460,16 +456,14 @@ const like = async (req, res) => {
 
 const getComment = async (req, res) => {
   const { token, id, count, index } = req.query;
-
+  const { _id } = req.jwtDecoded.data;
   try {
     // kiểm tra input có null không
     if (!count || !index) {
       throw Error("params");
     }
     // tìm post theo id
-    var postData = await Post.findOne({ _id: id }, (err, docs) => {
-      if (err) throw err;
-    }).populate({
+    var postData = await Post.findOne({ _id: id }).populate({
       path: "comment_list",
       populate: {
         path: "poster",
@@ -486,54 +480,42 @@ const getComment = async (req, res) => {
     } else {
       // neu khong co loi gi
       // kiem tra author bai viet cos block user khong
-      var authorData = await User.findOne(
-        { _id: postData.author },
-        (err, docs) => {
-          if (err) throw err;
-        }
-      );
-      authorData.blockedIds.forEach((element) => {
-        if (element == _id) {
-          throw Error("authorblock");
-        }
-      });
+      var authorData = await User.findOne({ _id: postData.author });
+      if (authorData.blockedIds.includes(String(_id))) {
+        throw Error("authorblock");
+      }
       // kiểm tra user có block author bai viet không
-      var userData = await User.findOne({ _id: _id }, (err, docs) => {
-        if (err) throw err;
-      });
-      userData.blockedIds.forEach((element) => {
-        if (element == postData.author) {
-          throw Error("userblock");
-        }
-      });
+      var userData = await User.findOne({ _id: _id });
+      if (userData.blockedIds.includes(String(postData.author))) {
+        throw Error("userblock");
+      }
       // nếu all ok
-
-      var comment_list = postData.comment_list.filter(async (element) => {
-        // kiểm tra author comment có block user không
-        var authorDataComment = await User.findOne(
-          { _id: element.author },
-          (err, docs) => {
-            if (err) throw err;
+      Promise.all(
+        postData.comment_list.map(async (element) => {
+          const authorDataComment = await User.findOne({
+            _id: element.poster,
+          }).select("blockedIds");
+          if (
+            (authorDataComment.blockedIds &&
+              authorDataComment.blockedIds.includes(String(_id))) ||
+            userData.blockedIds.includes(String(element.poster._id))
+          ) {
+            return null;
+          } else {
+            return Promise.resolve(element);
           }
-        );
-        // var flag = true;
-        if (
-          !authorDataComment.blockedIds.includes(_id) ||
-          !userData.blockedIds.includes(element.author)
-        ) {
-          return false;
-        } else {
-          return true;
-        }
-      });
-
-      res.status(200).json({
-        code: statusCode.OK,
-        message: statusMessage.OK,
-        data: comment_list,
+        })
+      ).then((result3) => {
+        console.log(result3);
+        return res.status(200).json({
+          code: statusCode.OK,
+          message: statusMessage.OK,
+          data: result3,
+        });
       });
     }
   } catch (err) {
+    console.log(err);
     if (err.message == "params") {
       console.log("loi tham so");
       return res.status(200).json({
@@ -597,58 +579,48 @@ const setComment = async (req, res) => {
       throw Error("action");
     }
     // tim author
-    var authorData = await User.findOne({ _id: result.author }, (err, docs) => {
-      if (err) throw err;
-    });
-    if (authorData.blockedIds.includes(_id)) {
+    var authorData = await User.findOne({ _id: result.author });
+    if (authorData.blockedIds.includes(String(_id))) {
       // neu author block user
       throw Error("blocked");
     }
-    // tim user co block user k
+    // tim user co block author k
     // tim user
-    var userData = await User.findOne({ _id: _id }, (err, docs) => {
-      if (err) throw err;
-    });
-    await userData.blockedIds.forEach((element) => {
-      if (element == _id) {
-        isblocked = "1";
-      }
-    });
-    if (userData.blockedIds.includes(result.author)) {
-      // neu author block user
+    var userData = await User.findOne({ _id: _id });
+    if (userData.blockedIds.includes(String(result.author))) {
+      // neu user block author
       throw Error("notaccess");
     }
-    var newcomment = await new Comment({
+    var newcomment = new Comment({
       // _id: mongoose.Schema.Types.ObjectId,
-      author: _id,
+      poster: _id,
       comment: comment,
-      date: Date.now(),
+      created: Date.now(),
     });
-    newcomment.save((err) => {
-      if (err) {
-        throw err;
-      }
-      var kq = Post.findByIdAndUpdate(
-        id,
-        {
-          $push: {
-            comment_list: newcomment._id,
-          },
-        },
-        (err2, docs) => {
-          if (err2) {
-            throw err2;
-          }
-          console.log(docs);
-        }
-      );
-    });
+    result.comment_list.push(newcomment._id);
+    await result.save();
+    await newcomment.save();
     console.log(newcomment);
+    var result2 = await Post.findOne({ _id: id }, (err, docs) => {
+      if (err) throw err;
+    }).populate({
+      path: "comment_list",
+      // skip: index||1,
+      options: { skip: 0, sort: { created: -1 }, limit: count },
+
+      populate: {
+        path: "poster",
+        select: "_id avatar username created",
+      },
+    });
+
     return res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
+      data: result2.comment_list,
     });
   } catch (error) {
+    console.log(error);
     if (error.message == "params") {
       return res.status(200).json({
         code: statusCode.PARAMETER_VALUE_IS_INVALID,

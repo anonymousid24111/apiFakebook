@@ -8,8 +8,8 @@
     get_post done
     edit_post done ? thumb
     delete_post done
-    get_comment 
-    set_comment
+    get_comment done
+    set_comment ? chưa xử lí bỏ qua các comment mà author comment và sender block nhau
     report_post done
     like done
 25/10/2020
