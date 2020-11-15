@@ -3,15 +3,15 @@
     logout done
     get_verify_code ?
     check_verify_code ?
-    change_info_after_signup  done
-        add_post done m// fix catch
-        get_post done  // fix catch
-        edit_post doing***************
-        delete_post done
-        get_comment
-        set_comment
-        report_post done
-        like doing*
+    change_info_after_signup done
+    add_post done
+    get_post done
+    edit_post done ? thumb
+    delete_post done
+    get_comment 
+    set_comment
+    report_post done
+    like done
 25/10/2020
     todolist:
         get_list_posts

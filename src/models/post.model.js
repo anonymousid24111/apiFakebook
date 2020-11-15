@@ -17,20 +17,21 @@ const postSchema = new mongoose.Schema({
     ref: "user",
   }],
   image: [{
-    id:  Schema.Types.ObjectId,
+    // id:  Schema.Types.ObjectId,
     url: String,
   }],
   video: {
-    id:  Schema.Types.ObjectId,
+    // id:  Schema.Types.ObjectId,
     url: String,
   },
   thumb: [{
-    id:  Schema.Types.ObjectId,
+    // id:  Schema.Types.ObjectId,
     url: String,
   }],
   // 
   author: { type: Schema.Types.ObjectId, ref: 'user' },
   state: String,
+  status: String,
   is_blocked: String,
   can_edit: String,
   banned: String,
