@@ -70,7 +70,7 @@ const signup = async (req, res) => {
           phonenumber: phonenumber,
           password: hashedPassword,
           username: username,
-          active: -1,
+          active: -1, 
         }).save();
         return res.status(200).json({
           code: statusCode.OK,

@@ -27,7 +27,7 @@
     set_request_friend ******** chưa test xử lí đã gửi request rồi thì thôi
     get_push_settings
     set_push_settings
-    change_password
+    change_password ** mạnh làm
     check_new_version
     set_devtoken
     get_conversation

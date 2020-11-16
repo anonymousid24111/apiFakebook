@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon --inspect ./index.js 3000",
-    "start": "nodemon --inspect ./index.js 3000",
+    "start": "node ./index.js 3000",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
