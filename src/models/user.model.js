@@ -9,7 +9,11 @@ const userSchema = new mongoose.Schema({
   is_blocked: String,
   requestedFriends: [{
     type: Schema.Types.ObjectId,
-    ref: "user"
+    ref: "request"
+  }],
+  sendRequestedFriends: [{
+    type: Schema.Types.ObjectId,
+    ref: "request"
   }],
   postIds: [{
     type: Schema.Types.ObjectId,

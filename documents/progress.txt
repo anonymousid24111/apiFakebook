@@ -17,15 +17,14 @@
     search done ? chưa xử lý tìm kiếm không dấu a=á=ă=â=ả=ã=à;
     get_saved_search done
     del_saved_search done
-    get_user_friends doing********************************************
-    get_user_info
-    set_user_info
-    get_list_videos
-    get_list_blocks
+    get_user_friends chưa xử lí bạn chung
+    get_list_videos***** chưa xử lí block ban 
+    set_accept_friend************* đợi làm set_accept_friend
+    get_requested_friends****** đợi làm set_accept_friend
+    get_list_suggested_friends ***** doing
+    get_list_blocks 
     set_block
-    set_accept_friend
-    get_requested_friends
-    set_request_friend
+    set_request_friend ******** chưa xử lí đã gửi request rồi thì thôi
     get_push_settings
     set_push_settings
     change_password
@@ -35,7 +34,6 @@
     delete_message
     get_list_conversation
     delete_conversation
-    get_list_suggested_friends
     check_new_item
     get_notification
     set_read_message

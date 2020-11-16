@@ -21,6 +21,10 @@ const authRoute = require("./src/routes/auth.route.js");
 const postRoute = require("./src/routes/post.route.js");
 const sixRoute = require("./src/routes/six.route.js");
 const sevenRoute = require("./src/routes/seven.route.js");
+const eightRoute = require("./src/routes/eight.route.js");
+const nineRoute = require("./src/routes/nine.route.js");
+const tenRoute = require("./src/routes/ten.route.js");
+const elevenRoute = require("./src/routes/eleven.route.js");
 
 const authMiddleware = require("./src/middlewares/auth.middleware.js");
 const { OK } = require("./src/constants/statusCode.constant.js");
@@ -71,6 +75,10 @@ app.use(`/${firstParamsRoute}`, authMiddleware.isAuth, userRoute);
 app.use(`/${firstParamsRoute}`, authMiddleware.isAuth, postRoute);
 app.use(`/${firstParamsRoute}`, authMiddleware.isAuth, sixRoute);
 app.use(`/${firstParamsRoute}`, authMiddleware.isAuth, sevenRoute);
+app.use(`/${firstParamsRoute}`, authMiddleware.isAuth, eightRoute);
+app.use(`/${firstParamsRoute}`, authMiddleware.isAuth, nineRoute);
+app.use(`/${firstParamsRoute}`, authMiddleware.isAuth, tenRoute);
+app.use(`/${firstParamsRoute}`, authMiddleware.isAuth, elevenRoute);
 
 app.listen(port, function () {
   console.log("Server listening on port " + port);
