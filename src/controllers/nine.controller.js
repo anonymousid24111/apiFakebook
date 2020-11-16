@@ -1,19 +1,12 @@
 const dotenv = require("dotenv");
 dotenv.config();
-const fs = require("fs");
-const formidable = require("formidable");
-const { getVideoDurationInSeconds } = require("get-video-duration");
 const mongoose = require("mongoose");
 
-const Post = require("../models/post.model.js");
 const User = require("../models/user.model.js");
-const ReportPost = require("../models/report.post.model.js");
-const Comment = require("../models/comment.model");
-
-const sameFriendsHelper = require("../helpers/sameFriends.helper.js");
 
 const statusCode = require("../constants/statusCode.constant.js");
 const statusMessage = require("../constants/statusMessage.constant.js");
+const md5 = require("md5");
 
 const getRequestedFriends = async (req, res) => {
   const { token, index, count } = req.query;
@@ -58,61 +51,67 @@ const getRequestedFriends = async (req, res) => {
   }
 };
 
-const getListVideos =async (req, res) => {
-  const {
-    token,
-    user_id,
-    in_campaign,
-    campaign_id,
-    latitude,
-    longtitude,
-    last_id,
-    index,
-    count,
-  } = req.query;
+const change_password = async (req, res) => {
+  let { token, password, new_password } = req.query;
+  const { _id } = req.jwtDecoded.data;
   try {
-      var postData= await Post.find({video: {
-          $ne: null
-      }})
-      return res.status(200).json({
-        code: statusCode.OK,
-        message: statusMessage.OK,
-        data: postData
-      });
+    const user = await User.findById(_id);
+    if (!new_password ||
+      new_password.length < 6 ||
+      new_password.length > 10 ||
+      new_password.match(/[^a-z|A-Z|0-9]/g))
+      throw Error("NEW_PASSWORD_VALUE_IS_INVALID");
+
+
+    if (password == new_password)
+      throw Error("PARAMETER_VALUE_IS_INVALID")
+
+    let count = 0;
+    // chưa check xâu con chung dài nhất 80%
+
+    password = md5(password)
+    if (password != user.password)
+      throw Error("OLD_PASSWORD_VALUE_IS_INVALID");
+
+    //đã thoả mãn các điều kiện
+
+    new_password = md5(new_password);
+    user.password = new_password;
+    await user.save();
+
+    return res.status(200).json({
+      code: statusCode.OK,
+      message: statusMessage.OK,
+    });
+
+
   } catch (error) {
-    return res.status(500).json({
+    console.log(error.message);
+    if (error.message == "PARAMETER_VALUE_IS_INVALID")
+      return res.status(200).json({
+        code: statusCode.PARAMETER_VALUE_IS_INVALID,
+        message: statusMessage.PARAMETER_VALUE_IS_INVALID
+      });
+    else if (error.message == "OLD_PASSWORD_VALUE_IS_INVALID")
+      return res.status(200).json({
+        code: statusCode.PARAMETER_VALUE_IS_INVALID,
+        message: "OLD_PASSWORD_VALUE_IS_INVALID"
+      });
+    else if (error.message == "NEW_PASSWORD_VALUE_IS_INVALID")
+      return res.status(200).json({
+        code: statusCode.PARAMETER_VALUE_IS_INVALID,
+        message: "NEW_PASSWORD_VALUE_IS_INVALID"
+      });
+    else return res.status(200).json({
       code: statusCode.UNKNOWN_ERROR,
       message: statusMessage.UNKNOWN_ERROR,
     });
+
   }
-};
 
-const getUserFriends = async (req, res)=>{
-    const {token}= req.query;
-    try {
-        var userData = await User.findById(_id).populate({
-            path: "friendIds",
-            select: "username avatar"
-        })
-        return res.status(500).json({
-            code: statusCode.OK,
-            message: statusMessage.OK,
-            data: {
-                friend: userData.friendIds,
-                total: "total"
-            }
-          });
 
-    } catch (error) {
-        return res.status(500).json({
-            code: statusCode.UNKNOWN_ERROR,
-            message: statusMessage.UNKNOWN_ERROR,
-          });
-    }
 }
 
 module.exports = {
-  getRequestedFriends,
-  getListVideos,
-  getUserFriends
+  change_password: change_password
 };

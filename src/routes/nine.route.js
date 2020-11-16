@@ -1,9 +1,8 @@
 const express = require("express");
-const sevenController = require("../controllers/seven.controller.js");
+const nineController = require("../controllers/nine.controller.js");
 const router = express.Router();
 
-router.post("/get_requested_friends", sevenController.getRequestedFriends);
-router.post("/get_list_videos", sevenController.getListVideos);
-router.post("/get_user_friends", sevenController.getUserFriends);
+router.post("/change_password", nineController.change_password);
+
 
 module.exports = router;
