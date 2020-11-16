@@ -97,10 +97,15 @@ const setRequestFriend = async (req, res) => {
       receiver: user_id,
       created: Date.now(),
     });
-    var userData = await User.findById(_id);
+    var userData = await User.findById(_id).populate({
+      path: "sendRequestedFriends"
+    });
     // console.log(userData)
     if (userData && userData.friends.length > commonConstant.LIMIT_FRIENDS) {
       throw Error("9994");
+    }
+    if (userData&& userData.sendRequestedFriends.receiver==user_id) {
+      throw Error("notfound");
     }
     userData.sendRequestedFriends.push(newRequest._id);
     var receiverData = await User.findByIdAndUpdate(user_id, {

@@ -24,7 +24,7 @@
     get_list_suggested_friends ***** doing
     get_list_blocks 
     set_block
-    set_request_friend ******** chưa xử lí đã gửi request rồi thì thôi
+    set_request_friend ******** chưa test xử lí đã gửi request rồi thì thôi
     get_push_settings
     set_push_settings
     change_password

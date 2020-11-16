@@ -23,7 +23,7 @@ const getListPosts = async (req, res) => {
     if (!index || !count || !latitude || !longitude) {
       throw Error("params");
     }
-    var result = await User.findById(_id).populated({
+    var result = await User.findById(_id).populate({
       path: "friends",
       select: "postIds",
       populate: {

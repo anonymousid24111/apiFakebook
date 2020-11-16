@@ -50,7 +50,7 @@ function validationPasword(password, phonenumber) {
 
 const signup = async (req, res) => {
   // const { phonenumber, password, uuid } = req.body;
-  const { phonenumber, password, uuid } = req.query;
+  const { phonenumber, password, uuid, username } = req.query;
   // phonenumber không tồn tại, độ dài khác 10, không có số không đầu tiên,
   // chứa kí tự không phải số
   try {
@@ -69,12 +69,15 @@ const signup = async (req, res) => {
         const user = await new User({
           phonenumber: phonenumber,
           password: hashedPassword,
+          username: username,
           active: -1,
         }).save();
         return res.status(200).json({
           code: statusCode.OK,
           message: statusMessage.OK,
-          user,
+          // user,
+
+          
         });
       } else {
         // phonenumber đã được đăng kí từ trước
