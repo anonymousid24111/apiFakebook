@@ -8,12 +8,18 @@ const userSchema = new mongoose.Schema({
   token: String,
   is_blocked: String,
   requestedFriends: [{
-    type: Schema.Types.ObjectId,
-    ref: "request"
+    author: {
+      type: Schema.Types.ObjectId,
+      ref: "user"
+    },
+    created: Date,
   }],
   sendRequestedFriends: [{
-    type: Schema.Types.ObjectId,
-    ref: "request"
+    receiver: {
+      type: Schema.Types.ObjectId,
+      ref: "request"
+    },
+    created: Date,
   }],
   postIds: [{
     type: Schema.Types.ObjectId,

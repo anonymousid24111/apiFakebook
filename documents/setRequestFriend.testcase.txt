@@ -52,8 +52,11 @@
     lúc hệ thống kiểm tra thì người dùng đã có đủ số lượng bạn tối đa.
     Kết quả mong đợi: hệ thống trả về lỗi 9994, ứng dụng tùy tình hình mà hiển
     thị thông báo cho người dùng.
-    // 
+    // code: 9994
+    message: no data...
     10. Người dùng truyền đúng mã phiên đăng nhập và tham số khác, nhưng trước
     đó đã gửi yêu cầu kết bạn rồi.
     Kết quả mong đợi: hệ thống coi như người dùng muốn hủy yêu cầu kết bạn
     đã gửi từ trước và trả về kết quả. Ứng dụng căn cứ tình hình mà hiển thị
+    code: 1000
+    message: OK

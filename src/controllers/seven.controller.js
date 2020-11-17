@@ -17,30 +17,42 @@ const statusMessage = require("../constants/statusMessage.constant.js");
 
 const getRequestedFriends = async (req, res) => {
   const { token, index, count } = req.query;
+  const { _id } = req.jwtDecoded.data;
   try {
     var userData = await User.findById(_id).populate({
-      path: "requestedFriends",
-      select: "_id username avatar",
+      path: "requestedFriends.author",
+      // select: "author._id author.username author.avatar",
     });
+    //.limit(count).skip(index);
+    // console.log(userData);
     Promise.all(
       userData.requestedFriends.map((element) => {
-        return sameFriendsHelper.sameFriends(userData.friendIds, element._id);
+        return sameFriendsHelper.sameFriends(
+          userData.friends,
+          element.author._id
+        );
       })
     )
       .then((result) => {
-        console.log(result);
-        userData.requestedFriends.map((value, index) => {
+        // console.log(result);
+        // console.log(userData.requestedFriends)
+        var a = userData.requestedFriends.map((value, index) => {
+          // let {_id, username, avatar} = value._doc.author;
+          // console.log(value.author._id)
           return {
-            value,
-            same_friends: result[index],
+            _id: value.author._id || null,
+            avatar: value.author.avatar || null,
+            username: value.author.username || null,
+            same_friend: result[index],
           };
         });
+        // console.log(a)
         return res.status(200).json({
           code: statusCode.OK,
           message: statusMessage.OK,
           data: {
-            request: userData.requestedFriends,
-            total: 0,
+            request: a,
+            total: userData.requestedFriends.length,
           },
         });
       })
@@ -51,6 +63,7 @@ const getRequestedFriends = async (req, res) => {
         });
       });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       code: statusCode.UNKNOWN_ERROR,
       message: statusMessage.UNKNOWN_ERROR,
@@ -58,7 +71,7 @@ const getRequestedFriends = async (req, res) => {
   }
 };
 
-const getListVideos =async (req, res) => {
+const getListVideos = async (req, res) => {
   const {
     token,
     user_id,
@@ -71,14 +84,16 @@ const getListVideos =async (req, res) => {
     count,
   } = req.query;
   try {
-      var postData= await Post.find({video: {
-          $ne: null
-      }})
-      return res.status(200).json({
-        code: statusCode.OK,
-        message: statusMessage.OK,
-        data: postData
-      });
+    var postData = await Post.find({
+      video: {
+        $ne: null,
+      },
+    });
+    return res.status(200).json({
+      code: statusCode.OK,
+      message: statusMessage.OK,
+      data: postData,
+    });
   } catch (error) {
     return res.status(500).json({
       code: statusCode.UNKNOWN_ERROR,
@@ -87,32 +102,49 @@ const getListVideos =async (req, res) => {
   }
 };
 
-const getUserFriends = async (req, res)=>{
-    const {token}= req.query;
-    try {
-        var userData = await User.findById(_id).populate({
-            path: "friendIds",
-            select: "username avatar"
-        })
-        return res.status(500).json({
-            code: statusCode.OK,
-            message: statusMessage.OK,
-            data: {
-                friend: userData.friendIds,
-                total: "total"
-            }
-          });
-
-    } catch (error) {
-        return res.status(500).json({
-            code: statusCode.UNKNOWN_ERROR,
-            message: statusMessage.UNKNOWN_ERROR,
-          });
-    }
-}
+const getUserFriends = async (req, res) => {
+  const { token } = req.query;
+  const {_id}= req.jwtDecoded.data;
+  try {
+    var userData = await User.findById(_id);
+    var resultSameFriend =await Promise.all(
+      userData.friends.map((element) => {
+        return sameFriendsHelper.sameFriends(
+          userData.friends,
+          element
+        );
+      })
+    );
+    // console.log(resultSameFriend)
+    userData = await User.findById(_id).populate({
+      path: "friends",
+      select: "avatar username"
+    });
+    var a= userData.friends.map((value, index)=>{
+      return{
+        ...value._doc,
+        same_friends: resultSameFriend[index],
+      }
+    })
+    return res.status(500).json({
+      code: statusCode.OK,
+      message: statusMessage.OK,
+      data: {
+        friends: a,
+        total: userData.friends.length,
+      },
+    });
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({
+      code: statusCode.UNKNOWN_ERROR,
+      message: statusMessage.UNKNOWN_ERROR,
+    });
+  }
+};
 
 module.exports = {
   getRequestedFriends,
   getListVideos,
-  getUserFriends
+  getUserFriends,
 };

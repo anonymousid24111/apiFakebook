@@ -2,7 +2,10 @@
     1. Người dùng truyền đúng mã phiên đăng nhập và các tham số khác
     Kết quả mong đợi: 1000 | OK (Thông báo thành công), gửi cho ứng dụng các
     thông tin cần thiết.
-
+    input: 
+        token
+        index:
+        count:
 
     2. Người dùng gửi sai mã phiên đăng nhập (mã bị trống hoặc quá ngắn hoặc
     mã phiên đăng nhập cũ) còn các tham số khác hợp lệ.
@@ -29,8 +32,20 @@
     7. Người dùng truyền đúng mã phiên đăng nhập và các tham số khác, nhưng
     kết quả trả về có số bạn chung ở một số yêu cầu kết bạn.
     Kết quả mong đợi: ứng dụng phải hiển thị số bạn chung.
-
-    //
+    output nhu testcase 1
+    code: 1000
+    message: OK
+    data:
+        {
+            request:[{
+                _id: 
+                author:
+                created:
+                same_friend
+            }]
+            total
+        }
+    
     8. Người dùng truyền đúng mã phiên đăng nhập và các tham số khác, nhưng
     kết quả trả về có số bạn chung KHÔNG CHUẨN ở một số yêu cầu kết bạn.
     Kết quả mong đợi: ứng dụng sẽ không hiển thị số bạn chung ở các yêu cầu
@@ -45,7 +60,9 @@
     truy vấn.
     Kết quả mong đợi: ứng dụng sẽ hiển thị tổng số total là bằng tổng số request
     kết bạn đã nhận được sau các lần truy vấn.
-    //
+    // FE xu li 
     11. Hệ thống cho phép chức năng pull down và pull up để làm mới và thêm mới
     vào danh sách các yêu cầu kết bạn.
+    // FE xu li 
     12. Hệ thống cho phép thực hiện việc cache dữ liệu ở tab này
+    // FE xu li

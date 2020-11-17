@@ -60,9 +60,7 @@ const signup = async (req, res) => {
     ) {
       throw Error("PARAMETER_VALUE_IS_INVALID");
     } else {
-      const userData = await User.findOne({ phonenumber: phonenumber }, (err, docs) => {
-        if (err) throw err;
-      });
+      const userData = await User.findOne({ phonenumber: phonenumber });
       if (!userData) {
         //chưa có phonenumber đã được đăng kí
         const hashedPassword = md5(password);

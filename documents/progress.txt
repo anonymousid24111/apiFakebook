@@ -17,14 +17,14 @@
     search done ? chưa xử lý tìm kiếm không dấu a=á=ă=â=ả=ã=à;
     get_saved_search done
     del_saved_search done
-    get_user_friends chưa xử lí bạn chung
+    get_user_friends done
     get_list_videos***** chưa xử lí block ban 
-    set_accept_friend************* đợi làm set_accept_friend
-    get_requested_friends****** đợi làm set_accept_friend
+    set_accept_friend ***** chưa xử lí block nhau
+    get_requested_friends done
     get_list_suggested_friends ***** doing
     get_list_blocks 
     set_block
-    set_request_friend ******** chưa test xử lí đã gửi request rồi thì thôi
+    set_request_friend done
     get_push_settings
     set_push_settings
     change_password ** mạnh làm
