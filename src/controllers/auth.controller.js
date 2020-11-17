@@ -66,18 +66,27 @@ const signup = async (req, res) => {
       if (!userData) {
         //chưa có phonenumber đã được đăng kí
         const hashedPassword = md5(password);
-        const user = await new User({
+        
+        const user = new User({
           phonenumber: phonenumber,
           password: hashedPassword,
           username: username,
           active: -1, 
-        }).save();
+        });
+        const accessToken = await jwtHelper.generateToken(
+          {_id: user._id, phonenumber: user.phonenumber},
+          accessTokenSecret,
+          accessTokenLife
+        );
+        user.token = accessToken;
+        await user.save();
         return res.status(200).json({
           code: statusCode.OK,
           message: statusMessage.OK,
-          // user,
-
-          
+          data: {
+            id: user._id,
+            token: accessToken,
+          }
         });
       } else {
         // phonenumber đã được đăng kí từ trước
@@ -123,7 +132,7 @@ const login = async (req, res) => {
           // kiểm tra password
           // tạo token
           const accessToken = await jwtHelper.generateToken(
-            userData,
+            {_id: userData._id, phonenumber: userData.phonenumber},
             accessTokenSecret,
             accessTokenLife
           );
