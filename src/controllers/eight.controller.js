@@ -26,9 +26,8 @@ const setAcceptFriend = async (req, res) => {
       console.log("lỗi user_id không hợp lệ");
       throw Error("params");
     }
-    // tim friend muốn accept
+    // tim friend muốn accept hoặc unaccept
     var friendData = await User.findById(user_id);
-    // kiểm tra xem đã kết bạn chưa
     if (friendData && friendData.friends && friendData.friends.includes(_id)) {
       console.log("Đã kết bạn");
       throw Error("notexist");
@@ -38,31 +37,59 @@ const setAcceptFriend = async (req, res) => {
       console.log("friend bị block");
       throw Error("notexist");
     }
-    var friendData = await User.findByIdAndUpdate(user_id, {
-      $pull: {
-        sendRequestedFriends: {
-          receiver: _id,
+    if (friendData && friendData.blockedIds.includes(_id)) {
+      console.log("friend da block user");
+      throw Error("action");
+    }
+
+    if (is_accept == 0) {
+      var friendData = await User.findByIdAndUpdate(user_id, {
+        $pull: {
+          sendRequestedFriends: {
+            receiver: _id,
+          },
         },
-      },
-      $push: {
-        friends: _id,
-      },
-    });
-    // tìm user và xoá requested friend có author == user_id
-    await User.findByIdAndUpdate(_id, {
-      $pull: {
-        requestedFriends: {
-          author: user_id,
+      });
+      await User.findByIdAndUpdate(_id, {
+        $pull: {
+          requestedFriends: {
+            author: user_id,
+          },
         },
-      },
-      $push: {
-        friends: user_id,
-      },
-    });
-    return res.status(200).json({
-      code: statusCode.OK,
-      message: statusMessage.OK,
-    });
+      });
+      return res.status(200).json({
+        code: statusCode.OK,
+        message: statusMessage.OK,
+      });
+    }
+    if (is_accept == 1) {
+      // kiểm tra xem đã kết bạn chưa
+      var friendData = await User.findByIdAndUpdate(user_id, {
+        $pull: {
+          sendRequestedFriends: {
+            receiver: _id,
+          },
+        },
+        $push: {
+          friends: _id,
+        },
+      });
+      // tìm user và xoá requested friend có author == user_id
+      await User.findByIdAndUpdate(_id, {
+        $pull: {
+          requestedFriends: {
+            author: user_id,
+          },
+        },
+        $push: {
+          friends: user_id,
+        },
+      });
+      return res.status(200).json({
+        code: statusCode.OK,
+        message: statusMessage.OK,
+      });
+    }
   } catch (error) {
     if (error.message == "params") {
       return res.status(200).json({
@@ -70,6 +97,11 @@ const setAcceptFriend = async (req, res) => {
         message: statusMessage.PARAMETER_VALUE_IS_INVALID,
       });
     } else if (error.message == "notexist") {
+      return res.status(200).json({
+        code: statusCode.ACTION_HAS_BEEN_DONE_PREVIOUSLY_BY_THIS_USER,
+        message: statusMessage.ACTION_HAS_BEEN_DONE_PREVIOUSLY_BY_THIS_USER,
+      });
+    } else if (error.message == "action") {
       return res.status(200).json({
         code: statusCode.ACTION_HAS_BEEN_DONE_PREVIOUSLY_BY_THIS_USER,
         message: statusMessage.ACTION_HAS_BEEN_DONE_PREVIOUSLY_BY_THIS_USER,
@@ -85,21 +117,36 @@ const setAcceptFriend = async (req, res) => {
 
 const getListSuggestedFriends = async (req, res) => {
   const { token, index, count } = req.query;
+  const { _id } = req.jwtDecoded.data;
   try {
     if (!index || !count || count < 0) {
       throw Error("params");
     }
-    // tìm các user chưa kết bạn
-    //  tìm các user
-    //  bỏ đi các user đã là bạn bè
-    //  tính toán số bạn chung
-    // trả về
-
+    var userData = await User.findById(_id);
+    var otherUsersData = await User.find({});
+    var result = await Promise.all(
+      otherUsersData.map((element) => {
+        if (
+          userData.friends.includes(element._id) ||
+          _id == element._id ||
+          userData.blockedIds.includes(element._id) ||
+          element.blockedIds.includes(_id)
+        ) {
+          return -1;
+        }
+        return sameFriendsHelper.sameFriends(userData.friends, element._id);
+      })
+    );
+    result = result.filter((x) => x != -1);
     return res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
+      data: {
+        list_users: result.slice(index, count),
+      },
     });
   } catch (error) {
+    console.log(error);
     if (error.message == "params") {
       return res.status(500).json({
         code: statusCode.PARAMETER_VALUE_IS_INVALID,
@@ -256,20 +303,27 @@ const getListBlocks = async (req, res) => {
   const { token, index, count } = req.query;
   const { _id } = req.jwtDecoded.data;
   try {
-    if (index<0||count<0) {
+    if (index < 0 || count < 0) {
       throw Error("params");
     }
     var userData = await User.findById(_id).populate({
       path: "blockedIds",
       select: "username avatar",
     });
+    var a = await Promise.all(userData.blockedIds.map(async element=>{
+      var result = await User.findById(element._id);
+      if (result.is_blocked) {
+        return false;
+      }
+      return element;
+    }))
     return res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
-      data: userData.blockedIds,
+      data: a.filter(x=>x!=false),
     });
   } catch (error) {
-    if (error.message=="params") {
+    if (error.message == "params") {
       return res.status(500).json({
         code: statusCode.PARAMETER_VALUE_IS_INVALID,
         message: statusMessage.PARAMETER_VALUE_IS_INVALID,

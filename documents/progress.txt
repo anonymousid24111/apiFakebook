@@ -26,18 +26,18 @@ Tuần 6:
 Tuần 7:
     get_requested_friends done
     get_user_friends done
-    get_list_videos***** chưa xử lí block ban 
+    get_list_videos done
 Tuần 8:
-    set_accept_friend ***** chưa xử lí block nhau
-    get_list_suggested_friends ***** doing
+    set_accept_friend done
+    get_list_suggested_friends done
     set_request_friend done
-    get_list_blocks ? chưa xử lí khoá và xoá tài khoản
+    get_list_blocks done
 Tuần 9:
     change_password ** mạnh làm
-    get_push_settings
-    set_push_settings
-    set_block done
-    check_new_version
+    get_push_settings done
+    set_push_settings done
+    set_block done  
+    check_new_version ???????? đợi làm notification và message
 Tuần 10
     get_notification
     set_read_notification

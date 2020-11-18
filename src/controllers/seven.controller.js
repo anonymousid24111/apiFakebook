@@ -83,18 +83,34 @@ const getListVideos = async (req, res) => {
     index,
     count,
   } = req.query;
+  const {_id}= req.jwtDecoded.data;
   try {
     var postData = await Post.find({
       video: {
         $ne: null,
       },
+    }).populate({
+      path: "author",
+      select: "username avatar"
     });
+    var userData = await User.findById(_id);
+    // user block athor
+    var b = await Promise.all(postData.map(async (element, index)=>{
+      var result = await User.findById(element.author._id);
+      if (result.blockedIds.includes(_id)||userData.blockedIds.includes(element.author._id)) {
+        console.log(false)
+        return false;
+      }
+      console.log(true)
+      return element;
+    }))
     return res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
-      data: postData,
+      data: b.filter(x=>x!=false),
     });
   } catch (error) {
+    console.log(error)
     return res.status(500).json({
       code: statusCode.UNKNOWN_ERROR,
       message: statusMessage.UNKNOWN_ERROR,

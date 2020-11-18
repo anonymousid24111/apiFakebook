@@ -3,6 +3,7 @@ dotenv.config();
 const mongoose = require("mongoose");
 
 const User = require("../models/user.model.js");
+const Version = require("../models/user.model.js");
 
 const statusCode = require("../constants/statusCode.constant.js");
 const statusMessage = require("../constants/statusMessage.constant.js");
@@ -38,11 +39,23 @@ const setBlock = async (req, res) => {
         },
         $pull: {
           friends: user_id,
+          sendRequestedFriends: {
+            receiver: user_id,
+          },
+          requestedFriends: {
+            author: user_id,
+          },
         },
       });
       await User.findById(user_id, {
         $pull: {
           friends: _id,
+          sendRequestedFriends: {
+            receiver: _id,
+          },
+          requestedFriends: {
+            author: _id,
+          },
         },
       });
       return res.status(200).json({
@@ -149,7 +162,168 @@ const change_password = async (req, res) => {
   }
 };
 
+const getPushSettings = async (req, res) => {
+  const { token } = req.query;
+  const { _id } = req.jwtDecoded.data;
+  try {
+    var userData = await User.findById(_id);
+    return res.status(200).json({
+      code: statusCode.OK,
+      message: statusMessage.OK,
+      data: userData.settings,
+    });
+  } catch (error) {
+    if (error.massage == "") {
+      return res.status(500).json({
+        code: statusCode.UNKNOWN_ERROR,
+        message: statusMessage.UNKNOWN_ERROR,
+      });
+    } else {
+      return res.status(500).json({
+        code: statusCode.UNKNOWN_ERROR,
+        message: statusMessage.UNKNOWN_ERROR,
+      });
+    }
+  }
+};
+
+const setPushSettings = async (req, res) => {
+  const {
+    token,
+    like_comment,
+    from_friends,
+    requested_friend,
+    suggested_friend,
+    birthday,
+    video,
+    report,
+    sound_on,
+    notification_on,
+    vibrant_on,
+    led_on,
+  } = req.query;
+  const { _id } = req.jwtDecoded.data;
+  try {
+    if (
+      like_comment == undefined &&
+      from_friends == undefined &&
+      requested_friend == undefined &&
+      suggested_friend == undefined &&
+      birthday == undefined &&
+      video == undefined &&
+      report == undefined &&
+      sound_on == undefined &&
+      notification_on == undefined &&
+      vibrant_on == undefined &&
+      led_on == undefined
+    ) {
+      throw Error("params");
+    }
+    var userData = await User.findById(_id);
+    userData.settings.like_comment =
+      like_comment == "0" || like_comment == "1"
+        ? like_comment
+        : userData.settings.like_comment;
+    userData.settings.from_friends =
+      from_friends == "0" || from_friends == "1"
+        ? from_friends
+        : userData.settings.from_friends;
+    userData.settings.requested_friend =
+      requested_friend == "0" || requested_friend == "1"
+        ? requested_friend
+        : userData.settings.requested_friend;
+    userData.settings.suggested_friend =
+      suggested_friend == "0" || suggested_friend == "1"
+        ? suggested_friend
+        : userData.settings.suggested_friend;
+    userData.settings.birthday =
+      birthday == "0" || birthday == "1"
+        ? birthday
+        : userData.settings.birthday;
+    userData.settings.video =
+      video == "0" || video == "1" ? video : userData.settings.video;
+    userData.settings.report =
+      report == "0" || report == "1" ? report : userData.settings.report;
+    userData.settings.sound_on =
+      sound_on == "0" || sound_on == "1"
+        ? sound_on
+        : userData.settings.sound_on;
+    userData.settings.notification_on =
+      notification_on == "0" || notification_on == "1"
+        ? notification_on
+        : userData.settings.notification_on;
+    userData.settings.vibrant_on =
+      vibrant_on == "0" || vibrant_on == "1"
+        ? vibrant_on
+        : userData.settings.vibrant_on;
+    userData.settings.led_on =
+      led_on == "0" || led_on == "1" ? led_on : userData.settings.led_on;
+    var result = await userData.save();
+
+    return res.status(200).json({
+      code: statusCode.OK,
+      message: statusMessage.OK,
+      data: result.settings,
+    });
+  } catch (error) {
+    if (error.massage == "params") {
+      return res.status(500).json({
+        code: statusCode.PARAMETER_VALUE_IS_INVALID,
+        message: statusMessage.PARAMETER_VALUE_IS_INVALID,
+      });
+    } else {
+      return res.status(500).json({
+        code: statusCode.UNKNOWN_ERROR,
+        message: statusMessage.UNKNOWN_ERROR,
+      });
+    }
+  }
+};
+
+const checkNewVersion = async (req, res)=>{
+  const {token, last_update}= req.query;
+  const {_id}= req.jwtDecoded.data;
+  try {
+    if (!last_update) {
+      throw Error("params")
+    }
+    var versionData = await Version.find({}).sort({created: 1});
+
+
+    return res.status(200).json({
+      code: statusCode.OK,
+      message: statusMessage.OK,
+      data:{
+        version: versionData[0],
+        user:{
+          id: _id,
+          _id: _id,
+        },
+        badge: "thong bao chua doc",
+        unread_message: "tin nhan chua doc",
+        now: "chi so phien ban"
+      }
+    })
+    
+  } catch (error) {
+    if (error.message=="params") {
+      return res.status(200).json({
+        code: statusCode.UNKNOWN_ERROR,
+        message: statusMessage.UNKNOWN_ERROR
+      })
+    } else {
+      return res.status(200).json({
+        code: statusCode.UNKNOWN_ERROR,
+        message: statusMessage.UNKNOWN_ERROR
+      })
+    }
+  }
+}
+
 module.exports = {
   change_password: change_password,
   setBlock,
+  getPushSettings,
+  setPushSettings,
+  checkNewVersion,
 };

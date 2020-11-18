@@ -43,6 +43,20 @@ const userSchema = new mongoose.Schema({
     type: Schema.Types.ObjectId,
     ref: "user"
   }],
+  settings:{
+    like_comment: { type: String, default: '1' },
+    from_friends: { type: String, default: '1' },
+    requested_friend: { type: String, default: '1' },
+    suggested_friend: { type: String, default: '1' },
+    birthday: { type: String, default: '1' },
+    video: { type: String, default: '1' },
+    report: { type: String, default: '1' },
+    sound_on: { type: String, default: '1' },
+    notification_on: { type: String, default: '1' },
+    vibrant_on: { type: String, default: '1' },
+    led_on: { type: String, default: '1' },
+  }
+
 });
 
 const User = mongoose.model("user", userSchema);
