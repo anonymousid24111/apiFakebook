@@ -50,4 +50,3 @@ Tuần 11
     set_read_message
     delete_message
     delete_conversation
-    check_new_item
