@@ -7,6 +7,11 @@ const userSchema = new mongoose.Schema({
   avatar: String,
   token: String,
   is_blocked: String,
+  description: String,
+  city: String,
+  country: String,
+  cover_image: String,
+  link: String,
   requestedFriends: [{
     author: {
       type: Schema.Types.ObjectId,

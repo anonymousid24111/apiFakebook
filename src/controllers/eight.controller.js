@@ -22,31 +22,31 @@ const setAcceptFriend = async (req, res) => {
   const { token, user_id, is_accept } = req.query;
   const { _id } = req.jwtDecoded.data;
   try {
-    if (!user_id || !ObjectId.isValid(user_id)||user_id==_id) {
+    if (!user_id || !ObjectId.isValid(user_id) || user_id == _id) {
       console.log("lỗi user_id không hợp lệ");
       throw Error("params");
     }
     // tim friend muốn accept
     var friendData = await User.findById(user_id);
     // kiểm tra xem đã kết bạn chưa
-    if (friendData&&friendData.friends&&friendData.friends.includes(_id)) {
+    if (friendData && friendData.friends && friendData.friends.includes(_id)) {
       console.log("Đã kết bạn");
       throw Error("notexist");
     }
 
-    if (!friendData||friendData.is_blocked) {
+    if (!friendData || friendData.is_blocked) {
       console.log("friend bị block");
       throw Error("notexist");
     }
-    var friendData = await User.findByIdAndUpdate(user_id,{
-      $pull:{
+    var friendData = await User.findByIdAndUpdate(user_id, {
+      $pull: {
         sendRequestedFriends: {
           receiver: _id,
-        }
+        },
       },
-      $push:{
+      $push: {
         friends: _id,
-      }
+      },
     });
     // tìm user và xoá requested friend có author == user_id
     await User.findByIdAndUpdate(_id, {
@@ -55,9 +55,9 @@ const setAcceptFriend = async (req, res) => {
           author: user_id,
         },
       },
-      $push:{
-        friends: user_id
-      }
+      $push: {
+        friends: user_id,
+      },
     });
     return res.status(200).json({
       code: statusCode.OK,
@@ -126,13 +126,13 @@ const setRequestFriend = async (req, res) => {
     var userData = await User.findById(_id);
     // kiểm tra receiver có gửi lời mời đến user không(có thì add bạn luôn)
     var receiverRequested = -1;
-    userData.requestedFriends.map((element, index)=>{
+    userData.requestedFriends.map((element, index) => {
       if (element && element.author == user_id) {
         receiverRequested = index;
         return;
       }
     });
-    if (receiverRequested!=-1) {
+    if (receiverRequested != -1) {
       userData.requestedFriends.splice(receiverRequested);
       userData.friends.push(user_id);
       var receiverData = await User.findByIdAndUpdate(user_id, {
@@ -141,9 +141,9 @@ const setRequestFriend = async (req, res) => {
             receiver: _id,
           },
         },
-        $push:{
-          friends: _id
-        }
+        $push: {
+          friends: _id,
+        },
       });
       if (
         !receiverData ||
@@ -252,8 +252,40 @@ const setRequestFriend = async (req, res) => {
   }
 };
 
+const getListBlocks = async (req, res) => {
+  const { token, index, count } = req.query;
+  const { _id } = req.jwtDecoded.data;
+  try {
+    if (index<0||count<0) {
+      throw Error("params");
+    }
+    var userData = await User.findById(_id).populate({
+      path: "blockedIds",
+      select: "username avatar",
+    });
+    return res.status(200).json({
+      code: statusCode.OK,
+      message: statusMessage.OK,
+      data: userData.blockedIds,
+    });
+  } catch (error) {
+    if (error.message=="params") {
+      return res.status(500).json({
+        code: statusCode.PARAMETER_VALUE_IS_INVALID,
+        message: statusMessage.PARAMETER_VALUE_IS_INVALID,
+      });
+    } else {
+      return res.status(500).json({
+        code: statusCode.UNKNOWN_ERROR,
+        message: statusMessage.UNKNOWN_ERROR,
+      });
+    }
+  }
+};
+
 module.exports = {
   setAcceptFriend,
   getListSuggestedFriends,
   setRequestFriend,
+  getListBlocks,
 };
