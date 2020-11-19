@@ -57,14 +57,18 @@ const getListConversation = async (req, res) => {
         select: "username avatar",
       },
     });
+    var numNewMessage= 0;
     userData.conversation.map((element) => {
+      
       element.conversation = element.conversation[0];
+      if(element.conversation[0].unread=="1") numNewMessage+=1;
+      return element;
     });
     return res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
       data: userData.conversation,
-      numNewMessage: "so conversation co message chua doc",
+      numNewMessage: numNewMessage,
     });
   } catch (error) {
     return res.status(500).json({
@@ -75,70 +79,94 @@ const getListConversation = async (req, res) => {
 };
 
 const setReadMessage = async (req, res) => {
-  const { token, partner_id, conversation_id, index, count } = req.query;
+  const { token, partner_id, conversation_id} = req.query;
   const { _id } = req.jwtDecoded.data;
   try {
-    var chatData = await Chat.findById(conversation_id).populate({
-      path: "sender",
-      select: "username avatar",
-      sort: {
-        created: -1,
-      },
+    var userData = await User.findById(_id);
+    if(!userData||userData.blockedIds.inclules(partner_id)){
+      throw Error("nodata")
+    }
+    var chatData = await Chat.findByIdA(conversation_id).populate({
+      path: "partner_id",
+      select: "username avatar"
     });
+    if(!chatData){
+      throw Error("notfound")
+    }
+    chatData.conversation = chatData.conversation.map(element=>{
+      element.unread = "0"
+      return element
+    })
     return res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
-      data: {
-        conversation: chatData.conversation.slice(index, count),
-        is_blocked: chatData.is_blocked == _id,
-      },
+      data: chatData
     });
   } catch (error) {
-    return res.status(500).json({
-      code: statusCode.UNKNOWN_ERROR,
-      message: statusMessage.UNKNOWN_ERROR,
-    });
+    if (error.message=="notfound") {
+      return res.status(500).json({
+        code: statusCode.POST_IS_NOT_EXISTED,
+        message: statusMessage.POST_IS_NOT_EXISTED,
+      });
+    } else if (error.message=="nodata") {
+      return res.status(500).json({
+        code: statusCode.NO_DATA_OR_END_OF_LIST_DATA,
+        message: statusMessage.NO_DATA_OR_END_OF_LIST_DATA,
+      });
+    } else {
+      return res.status(500).json({
+        code: statusCode.UNKNOWN_ERROR,
+        message: statusMessage.UNKNOWN_ERROR,
+      });
+    }
+    
   }
 };
 
 const deleteConversation = async (req, res) => {
-  const { token, partner_id, conversation_id, index, count } = req.query;
+  const { token, partner_id, conversation_id, message_id } = req.query;
   const { _id } = req.jwtDecoded.data;
   try {
-    var chatData = await Chat.findById(conversation_id).populate({
-      path: "sender",
-      select: "username avatar",
-      sort: {
-        created: -1,
-      },
+    var chatData = await Chat.findByIdAndUpdate(conversation_id, {
+      $pull:{
+        partner_id: _id
+      }
     });
+    if (!chatData) {
+      throw Error("nodata");
+    }
     return res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
-      data: {
-        conversation: chatData.conversation.slice(index, count),
-        is_blocked: chatData.is_blocked == _id,
-      },
     });
   } catch (error) {
-    return res.status(500).json({
-      code: statusCode.UNKNOWN_ERROR,
-      message: statusMessage.UNKNOWN_ERROR,
-    });
+    if (error.message=="nodata") {
+      return res.status(500).json({
+        code: statusCode.NO_DATA_OR_END_OF_LIST_DATA,
+        message: statusMessage.NO_DATA_OR_END_OF_LIST_DATA,
+      });
+    } else {
+      return res.status(500).json({
+        code: statusCode.UNKNOWN_ERROR,
+        message: statusMessage.UNKNOWN_ERROR,
+      });
+    }
+    
   }
 };
 
 const deleteMessage = async (req, res) => {
-  const { token, partner_id, conversation_id, index, count } = req.query;
+  const { token, partner_id, conversation_id, message_id } = req.query;
   const { _id } = req.jwtDecoded.data;
   try {
-    var chatData = await Chat.findById(conversation_id).populate({
-      path: "sender",
-      select: "username avatar",
-      sort: {
-        created: -1,
-      },
+    var chatData = await Chat.findByIdAndUpdate(conversation_id, {
+      $pull:{
+        conversation: message_id
+      }
     });
+    if (!chatData) {
+      throw Error("nodata");
+    }
     return res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
@@ -148,10 +176,18 @@ const deleteMessage = async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({
-      code: statusCode.UNKNOWN_ERROR,
-      message: statusMessage.UNKNOWN_ERROR,
-    });
+    if (error.message=="nodata") {
+      return res.status(500).json({
+        code: statusCode.NO_DATA_OR_END_OF_LIST_DATA,
+        message: statusMessage.NO_DATA_OR_END_OF_LIST_DATA,
+      });
+    } else {
+      return res.status(500).json({
+        code: statusCode.UNKNOWN_ERROR,
+        message: statusMessage.UNKNOWN_ERROR,
+      });
+    }
+    
   }
 };
 

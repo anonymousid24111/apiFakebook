@@ -10,8 +10,8 @@ const chatSchema = new mongoose.Schema({
     unread: String,
     created: Date,
     sender: { type: Schema.Types.ObjectId, ref: 'user' },
-
   }],
+  unread: String,
   created: Date,
   is_blocked: String,
 });
