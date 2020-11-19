@@ -37,26 +37,27 @@
     thống báo người dùng đã bị khóa (trường active = 0).
     Kết quả mong đợi: ứng dụng phải đẩy người dùng sang trang đăng nhập với thông
     báo bạn đã bị khóa tài khoản.
+    //middle kiem tra is_blocked= true
     8. Người dùng truyền đúng mã phiên đăng nhập, và các tham số khác đầy đủ nhưng hệ
     thống báo sai ID của người dùng hoặc sai giá trị active (giá trị đúng là 0 hoặc 1).
     Kết quả mong đợi: Ứng dụng vẫn hoạt động bình thường.
-    51
-    Các test case cho check_new_version (5)
+    // Fe xu li 
     9. Người dùng truyền đúng mã phiên đăng nhập, và các tham số khác đầy đủ nhưng hệ
     thống báo sai giá trị badge (âm hoặc sai định dạng).
     Kết quả mong đợi: Ứng dụng coi như giá trị đó bằng 0.
+    // Fe xu li 
     10. Người dùng truyền đúng mã phiên đăng nhập, và các tham số khác đầy đủ và hệ
     thống báo giá trị badge hợp lệ.
     Kết quả mong đợi: Ứng dụng hiển thị một hình tròn đỏ ở trên hình cái chuông, trong
     đó có hiển thị số badge. Nếu số đó lớn hơn 100 thì ghi 99+. Chú ý vòng tròn đỏ phải
     to dần nếu cần hiển thị 1, 2, hoặc 3 ký tự.
-    52
-    Các test case cho check_new_version (6)
+    // fe xu li 
     11. Người dùng truyền đúng mã phiên đăng nhập, và các tham số khác đầy đủ và hệ
     thống báo giá trị unread_message hợp lệ.
     Kết quả mong đợi: Ứng dụng hiển thị một hình tròn đỏ ở trên hình biểu tượng chat,
     trong đó có hiển thị số tin nhắn chưa đọc. Nếu số đó lớn hơn 100 thì ghi 99+. Chú ý
     vòng tròn đỏ phải to hơn nếu con số badge là 99+
+    // Fe xu li 
     12. Người dùng truyền đúng mã phiên đăng nhập, và các tham số khác và hệ thống gửi
     về có giá trị now hợp lệ (không trống và không chứa ký tự đặc biệt khác dấu chấm). Giá trị
     now sau là hợp lệ: 0.1.0.9A (chẳng hạn)

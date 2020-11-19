@@ -1,9 +1,11 @@
 const express = require("express");
-const sevenController = require("../controllers/seven.controller.js");
+const elevenController = require("../controllers/eleven.controller.js");
 const router = express.Router();
 
-router.post("/get_requested_friends", sevenController.getRequestedFriends);
-router.post("/get_list_videos", sevenController.getListVideos);
-router.post("/get_user_friends", sevenController.getUserFriends);
+router.post("/get_conversation", elevenController.getConversation);
+router.post("/get_list_conversation", elevenController.getListConversation);
+router.post("/set_read_message", elevenController.setReadMessage);
+router.post("/delete_message", elevenController.deleteMessage);
+router.post("/delete_conversation", elevenController.deleteConversation);
 
 module.exports = router;

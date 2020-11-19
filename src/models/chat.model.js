@@ -1,10 +1,19 @@
 const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
 
 const chatSchema = new mongoose.Schema({
-  idofa: String,// id
-  idofb: String,
-  content: String,
-  date: Date,
+  partner_id: [
+    { type: Schema.Types.ObjectId, ref: 'user' }
+  ],
+  conversation: [{
+    message: String,
+    unread: String,
+    created: Date,
+    sender: { type: Schema.Types.ObjectId, ref: 'user' },
+
+  }],
+  created: Date,
+  is_blocked: String,
 });
 
 const chat = mongoose.model("chat", chatSchema);

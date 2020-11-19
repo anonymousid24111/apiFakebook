@@ -1,20 +1,25 @@
 require("dotenv").config();
 
-const express = require("express");
+const app = require("express")();
+const server = require("http").Server(app);
+const io = require("socket.io")(server);
 const bodyParser = require("body-parser");
 const formidable = require("formidable");
 const fs = require("fs");
 // const ThumbnailGenerator = require('video-thumbnail-generator').default;
-const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
-const ffmpeg = require('fluent-ffmpeg');
+const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
+const ffmpeg = require("fluent-ffmpeg");
 ffmpeg.setFfmpegPath(ffmpegPath);
 // const cookieParser = require( 'cookie-parser'
 const mongoose = require("mongoose");
-mongoose.connect(process.env.MONGO_URL || "mongodb://localhost/ungdungdanentang", {
-  useUnifiedTopology: true,
-  useNewUrlParser: true,
-  useFindAndModify: false,
-});
+mongoose.connect(
+  process.env.MONGO_URL || "mongodb://localhost/ungdungdanentang",
+  {
+    useUnifiedTopology: true,
+    useNewUrlParser: true,
+    useFindAndModify: false,
+  }
+);
 
 const userRoute = require("./src/routes/user.route.js");
 const authRoute = require("./src/routes/auth.route.js");
@@ -25,6 +30,7 @@ const eightRoute = require("./src/routes/eight.route.js");
 const nineRoute = require("./src/routes/nine.route.js");
 const tenRoute = require("./src/routes/ten.route.js");
 const elevenRoute = require("./src/routes/eleven.route.js");
+const bonusRoute = require("./src/routes/bonus.route.js");
 
 const authMiddleware = require("./src/middlewares/auth.middleware.js");
 const { OK } = require("./src/constants/statusCode.constant.js");
@@ -32,7 +38,7 @@ const { OK } = require("./src/constants/statusCode.constant.js");
 const port = process.env.PORT || 3000;
 const firstParamsRoute = process.env.FIRST_PARAMS_ROUTE || "it4788";
 
-const app = express();
+// const app = express();
 
 app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
@@ -40,8 +46,8 @@ app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x
 app.all("/", (req, res) => {
   res.status(200).json({
     code: 1000,
-    message: OK
-  })
+    message: OK,
+  });
 });
 
 app.post("/fileupload", (req, res) => {
@@ -50,22 +56,23 @@ app.post("/fileupload", (req, res) => {
     // console.log(files.filetoupload, fields)
     var oldpath = files.filetoupload.path;
     var newpath = "upload/" + files.filetoupload.name;
-    var proc = ffmpeg(oldpath).on('filenames', function(filenames) {
-      console.log('Will generate ' + filenames.join(', '))
-    })
-    .on('end', function() {
-      console.log('Screenshots taken');
-    })
-    .screenshots({
-      // Will take screens at 20%, 40%, 60% and 80% of the video
-      count: 4,
-      folder: '/upload'
-    });
-    console.log(proc)
+    var proc = ffmpeg(oldpath)
+      .on("filenames", function (filenames) {
+        console.log("Will generate " + filenames.join(", "));
+      })
+      .on("end", function () {
+        console.log("Screenshots taken");
+      })
+      .screenshots({
+        // Will take screens at 20%, 40%, 60% and 80% of the video
+        count: 4,
+        folder: "/upload",
+      });
+    console.log(proc);
     // fs.rename(oldpath, newpath, function (err) {
     //   if (err) throw err;
-      res.write("File uploaded and moved!");
-      return res.end();
+    res.write("File uploaded and moved!");
+    return res.end();
     // });
   });
 });
@@ -79,7 +86,46 @@ app.use(`/${firstParamsRoute}`, authMiddleware.isAuth, eightRoute);
 app.use(`/${firstParamsRoute}`, authMiddleware.isAuth, nineRoute);
 app.use(`/${firstParamsRoute}`, authMiddleware.isAuth, tenRoute);
 app.use(`/${firstParamsRoute}`, authMiddleware.isAuth, elevenRoute);
+app.use(`/${firstParamsRoute}`, authMiddleware.isAuth, bonusRoute);
 
-app.listen(port, function () {
-  console.log("Server listening on port " + port);
+// test socket
+app.get("/testsocket", (req, res) => {
+  res.sendFile(__dirname + "/index.html");
 });
+rooms = [];
+chats = [];
+io.on("connection", function (socket) {
+  console.log("A user connected:" + socket.id);
+  socket.on("joinchat", function (data) {
+    socket.join(data.room);
+    rooms.push(data.room);
+    // console.log(socket.rooms, rooms);
+    socket.emit("joinedchat", {
+      room: data.room,
+      chats: chats.filter((e) => e.room == data.room),
+    });
+  });
+  socket.on("reconnecting", (data) => {
+    console.log("client dang tao lai ket noi");
+  });
+  socket.on("send", function (data) {
+    chats.push(data);
+    io.to(data.room).emit("onmessage", {
+      sender: data.sender,
+      room: data.room,
+      receiver: data.receiver,
+      message: data.message,
+    });
+  });
+  socket.on("deletamessage", data=>{
+    console.log("client xoa tin nhan")
+  })
+  socket.on("disconnect", data=>{
+    console.log("client ngat ket noi")
+  })
+});
+
+server.listen(port);
+// app.listen(port, function () {
+//   console.log("Server listening on port " + port);
+// });

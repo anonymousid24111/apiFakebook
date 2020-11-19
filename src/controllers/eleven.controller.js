@@ -8,48 +8,64 @@ const mongoose = require("mongoose");
 const Post = require("../models/post.model.js");
 const User = require("../models/user.model.js");
 const ReportPost = require("../models/report.post.model.js");
-const Comment = require("../models/comment.model");
+const Chat = require("../models/chat.model");
 
 const sameFriendsHelper = require("../helpers/sameFriends.helper.js");
 
 const statusCode = require("../constants/statusCode.constant.js");
 const statusMessage = require("../constants/statusMessage.constant.js");
 
-const getRequestedFriends = async (req, res) => {
+const getConversation = async (req, res) => {
+  const { token, partner_id, conversation_id, index, count } = req.query;
+  const { _id } = req.jwtDecoded.data;
+  try {
+    var chatData = await Chat.findById(conversation_id).populate({
+      path: "sender",
+      select: "username avatar",
+      sort: {
+        created: -1,
+      },
+    });
+    return res.status(200).json({
+      code: statusCode.OK,
+      message: statusMessage.OK,
+      data: {
+        conversation: chatData.conversation.slice(index, count),
+        is_blocked: chatData.is_blocked == _id,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      code: statusCode.UNKNOWN_ERROR,
+      message: statusMessage.UNKNOWN_ERROR,
+    });
+  }
+};
+
+const getListConversation = async (req, res) => {
   const { token, index, count } = req.query;
+  const { _id } = req.jwtDecoded.data;
   try {
     var userData = await User.findById(_id).populate({
-      path: "requestedFriends",
-      select: "_id username avatar",
+      path: "conversation",
+      select: "partner_id created is_blocked conversation",
+      sort: {
+        created: -1,
+      },
+      populate: {
+        path: "partner_id",
+        select: "username avatar",
+      },
     });
-    Promise.all(
-      userData.requestedFriends.map((element) => {
-        return sameFriendsHelper.sameFriends(userData.friendIds, element._id);
-      })
-    )
-      .then((result) => {
-        console.log(result);
-        userData.requestedFriends.map((value, index) => {
-          return {
-            value,
-            same_friends: result[index],
-          };
-        });
-        return res.status(200).json({
-          code: statusCode.OK,
-          message: statusMessage.OK,
-          data: {
-            request: userData.requestedFriends,
-            total: 0,
-          },
-        });
-      })
-      .catch((e) => {
-        return res.status(200).json({
-          code: statusCode.UNKNOWN_ERROR,
-          message: statusMessage.UNKNOWN_ERROR,
-        });
-      });
+    userData.conversation.map((element) => {
+      element.conversation = element.conversation[0];
+    });
+    return res.status(200).json({
+      code: statusCode.OK,
+      message: statusMessage.OK,
+      data: userData.conversation,
+      numNewMessage: "so conversation co message chua doc",
+    });
   } catch (error) {
     return res.status(500).json({
       code: statusCode.UNKNOWN_ERROR,
@@ -58,27 +74,25 @@ const getRequestedFriends = async (req, res) => {
   }
 };
 
-const getListVideos =async (req, res) => {
-  const {
-    token,
-    user_id,
-    in_campaign,
-    campaign_id,
-    latitude,
-    longtitude,
-    last_id,
-    index,
-    count,
-  } = req.query;
+const setReadMessage = async (req, res) => {
+  const { token, partner_id, conversation_id, index, count } = req.query;
+  const { _id } = req.jwtDecoded.data;
   try {
-      var postData= await Post.find({video: {
-          $ne: null
-      }})
-      return res.status(200).json({
-        code: statusCode.OK,
-        message: statusMessage.OK,
-        data: postData
-      });
+    var chatData = await Chat.findById(conversation_id).populate({
+      path: "sender",
+      select: "username avatar",
+      sort: {
+        created: -1,
+      },
+    });
+    return res.status(200).json({
+      code: statusCode.OK,
+      message: statusMessage.OK,
+      data: {
+        conversation: chatData.conversation.slice(index, count),
+        is_blocked: chatData.is_blocked == _id,
+      },
+    });
   } catch (error) {
     return res.status(500).json({
       code: statusCode.UNKNOWN_ERROR,
@@ -87,32 +101,64 @@ const getListVideos =async (req, res) => {
   }
 };
 
-const getUserFriends = async (req, res)=>{
-    const {token}= req.query;
-    try {
-        var userData = await User.findById(_id).populate({
-            path: "friendIds",
-            select: "username avatar"
-        })
-        return res.status(500).json({
-            code: statusCode.OK,
-            message: statusMessage.OK,
-            data: {
-                friend: userData.friendIds,
-                total: "total"
-            }
-          });
+const deleteConversation = async (req, res) => {
+  const { token, partner_id, conversation_id, index, count } = req.query;
+  const { _id } = req.jwtDecoded.data;
+  try {
+    var chatData = await Chat.findById(conversation_id).populate({
+      path: "sender",
+      select: "username avatar",
+      sort: {
+        created: -1,
+      },
+    });
+    return res.status(200).json({
+      code: statusCode.OK,
+      message: statusMessage.OK,
+      data: {
+        conversation: chatData.conversation.slice(index, count),
+        is_blocked: chatData.is_blocked == _id,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      code: statusCode.UNKNOWN_ERROR,
+      message: statusMessage.UNKNOWN_ERROR,
+    });
+  }
+};
 
-    } catch (error) {
-        return res.status(500).json({
-            code: statusCode.UNKNOWN_ERROR,
-            message: statusMessage.UNKNOWN_ERROR,
-          });
-    }
-}
+const deleteMessage = async (req, res) => {
+  const { token, partner_id, conversation_id, index, count } = req.query;
+  const { _id } = req.jwtDecoded.data;
+  try {
+    var chatData = await Chat.findById(conversation_id).populate({
+      path: "sender",
+      select: "username avatar",
+      sort: {
+        created: -1,
+      },
+    });
+    return res.status(200).json({
+      code: statusCode.OK,
+      message: statusMessage.OK,
+      data: {
+        conversation: chatData.conversation.slice(index, count),
+        is_blocked: chatData.is_blocked == _id,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      code: statusCode.UNKNOWN_ERROR,
+      message: statusMessage.UNKNOWN_ERROR,
+    });
+  }
+};
 
 module.exports = {
-  getRequestedFriends,
-  getListVideos,
-  getUserFriends
+  getConversation,
+  getListConversation,
+  setReadMessage,
+  deleteMessage,
+  deleteConversation,
 };

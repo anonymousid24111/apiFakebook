@@ -56,8 +56,10 @@
 * set_user_info done ? cho thay đổi link nhưng chưa check 
 ***
 # Tuần 11
-* get_list_conversation
-* get_conversation
+* get_list_conversation ** doing here tính số conversition có message chưa đọc
+* get_conversation done *** chưa test, chưa check params
 * set_read_message
 * delete_message
 * delete_conversation
+# Api bonus
+* set_conversation done *** chưa test tạo coversation giữa 2 người input: partner_id

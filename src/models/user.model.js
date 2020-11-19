@@ -12,51 +12,68 @@ const userSchema = new mongoose.Schema({
   country: String,
   cover_image: String,
   link: String,
-  requestedFriends: [{
-    author: {
-      type: Schema.Types.ObjectId,
-      ref: "user"
+  requestedFriends: [
+    {
+      author: {
+        type: Schema.Types.ObjectId,
+        ref: "user",
+      },
+      created: Date,
     },
-    created: Date,
-  }],
-  sendRequestedFriends: [{
-    receiver: {
-      type: Schema.Types.ObjectId,
-      ref: "request"
+  ],
+  sendRequestedFriends: [
+    {
+      receiver: {
+        type: Schema.Types.ObjectId,
+        ref: "request",
+      },
+      created: Date,
     },
-    created: Date,
-  }],
-  postIds: [{
-    type: Schema.Types.ObjectId,
-    ref: "post"
-  }],
-  blockedIds: [{
-    type: Schema.Types.ObjectId,
-    ref: "user"
-  }],
-  savedSearch: [{
-    keyword: String,
-    created: Date,
-  }],
+  ],
+  postIds: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "post",
+    },
+  ],
+  blockedIds: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "user",
+    },
+  ],
+  savedSearch: [
+    {
+      keyword: String,
+      created: Date,
+    },
+  ],
   active: Number,
-  friends: [{
-    type: Schema.Types.ObjectId,
-    ref: "user"
-  }],
-  settings:{
-    like_comment: { type: String, default: '1' },
-    from_friends: { type: String, default: '1' },
-    requested_friend: { type: String, default: '1' },
-    suggested_friend: { type: String, default: '1' },
-    birthday: { type: String, default: '1' },
-    video: { type: String, default: '1' },
-    report: { type: String, default: '1' },
-    sound_on: { type: String, default: '1' },
-    notification_on: { type: String, default: '1' },
-    vibrant_on: { type: String, default: '1' },
-    led_on: { type: String, default: '1' },
-  }
-
+  friends: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "user",
+    },
+  ],
+  settings: {
+    like_comment: { type: String, default: "1" },
+    from_friends: { type: String, default: "1" },
+    requested_friend: { type: String, default: "1" },
+    suggested_friend: { type: String, default: "1" },
+    birthday: { type: String, default: "1" },
+    video: { type: String, default: "1" },
+    report: { type: String, default: "1" },
+    sound_on: { type: String, default: "1" },
+    notification_on: { type: String, default: "1" },
+    vibrant_on: { type: String, default: "1" },
+    led_on: { type: String, default: "1" },
+  },
+  conversations: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "chat",
+    },
+  ],
 });
 
 const User = mongoose.model("user", userSchema);
