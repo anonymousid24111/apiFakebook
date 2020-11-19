@@ -34,6 +34,7 @@ const bonusRoute = require("./src/routes/bonus.route.js");
 
 const authMiddleware = require("./src/middlewares/auth.middleware.js");
 const { OK } = require("./src/constants/statusCode.constant.js");
+const Chat = require("./src/models/chat.model.js");
 
 const port = process.env.PORT || 3000;
 const firstParamsRoute = process.env.FIRST_PARAMS_ROUTE || "it4788";
@@ -92,33 +93,53 @@ app.use(`/${firstParamsRoute}`, authMiddleware.isAuth, bonusRoute);
 app.get("/testsocket", (req, res) => {
   res.sendFile(__dirname + "/index.html");
 });
-rooms = [];
+useronlines = [];
 chats = [];
 io.on("connection", function (socket) {
   console.log("A user connected:" + socket.id);
   socket.on("joinchat", function (data) {
-    socket.join(data.room);
-    rooms.push(data.room);
-    // console.log(socket.rooms, rooms);
+    socket.join(data._id);
+    useronlines.push(data._id);
+    // console.log(socket.useronlines, useronlines);
     socket.emit("joinedchat", {
-      room: data.room,
-      chats: chats.filter((e) => e.room == data.room),
+      room: data._id,
+      // chats: chats.filter((e) => e.room == data.room),
     });
   });
   socket.on("reconnecting", (data) => {
     console.log("client dang tao lai ket noi");
   });
-  socket.on("send", function (data) {
-    chats.push(data);
-    io.to(data.room).emit("onmessage", {
-      sender: data.sender,
-      room: data.room,
-      receiver: data.receiver,
-      message: data.message,
+  socket.on("send", async ({sender, receiver, message_id, created, content, conversation_id})=> {
+    await Chat.findByIdAndUpdate(conversation_id, {
+      $push: {
+        conversation: {
+          message: content,
+          unread: "1",
+          created: Date.now(),
+          sender: sender
+        }
+      }
+    })
+    io.to(receiver).emit("onmessage", {
+      sender: sender,
+      receiver: receiver,
+      content: content,
+      created: Date.now()
     });
   });
-  socket.on("deletamessage", data=>{
-    console.log("client xoa tin nhan")
+  socket.on("deletemessage",async ({sender, receiver, message_id, created, content, conversation_id})=>{
+    await Chat.findByIdAndUpdate(_id, {
+      $push:{
+        conversation: {
+          _id: message_id
+        }
+      }
+    });
+    io.to(receiver).emit("ondeletemessage", {
+      sender: sender,
+      receiver: receiver,
+      message_id: message_id,
+    });
   })
   socket.on("disconnect", data=>{
     console.log("client ngat ket noi")
