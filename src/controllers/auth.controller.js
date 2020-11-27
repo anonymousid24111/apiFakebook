@@ -120,9 +120,7 @@ const login = async (req, res) => {
       throw Error("PARAMETER_VALUE_IS_INVALID");
     } else {// nhập đúng định dạng phonenumber và password
       // tìm dữ liệu user qua phonenumber
-      const userData = await User.findOne({ phonenumber: phonenumber }, (err, docs) => {
-        if (err) throw err;
-      });
+      const userData = await User.findOne({ phonenumber: phonenumber });
       if (userData) {
         // tìm được user có trong hệ thống
         const hashedPassword = md5(password);// mã hoá password

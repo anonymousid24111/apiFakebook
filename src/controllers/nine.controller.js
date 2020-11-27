@@ -33,7 +33,7 @@ const setBlock = async (req, res) => {
       throw Error("blockedbefore");
     }
     if (type == 0 && !isBlocked) {
-      await User.findById(_id, {
+      await User.findByIdAndUpdate(_id, {
         $push: {
           blockedIds: user_id,
         },
@@ -47,7 +47,7 @@ const setBlock = async (req, res) => {
           },
         },
       });
-      await User.findById(user_id, {
+      await User.findByIdAndUpdate(user_id, {
         $pull: {
           friends: _id,
           sendRequestedFriends: {
@@ -68,7 +68,7 @@ const setBlock = async (req, res) => {
       throw Error("unblockedbefore");
     }
     if (type == 1 && isBlocked) {
-      await User.findById(_id, {
+      await User.findByIdAndUpdate(_id, {
         $pull: {
           blockedIds: user_id,
         },

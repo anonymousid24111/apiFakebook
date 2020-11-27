@@ -6,6 +6,7 @@ const io = require("socket.io")(server);
 const bodyParser = require("body-parser");
 const formidable = require("formidable");
 const fs = require("fs");
+var cors = require('cors');
 // const ThumbnailGenerator = require('video-thumbnail-generator').default;
 const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
 const ffmpeg = require("fluent-ffmpeg");
@@ -40,7 +41,7 @@ const port = process.env.PORT || 3000;
 const firstParamsRoute = process.env.FIRST_PARAMS_ROUTE || "it4788";
 
 // const app = express();
-
+app.use(cors())
 app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 
@@ -142,7 +143,8 @@ io.on("connection", function (socket) {
     });
   })
   socket.on("disconnect", data=>{
-    console.log("client ngat ket noi")
+    console.log("client ngat ket noi");
+    // useronlines.find(x)
   })
 });
 
