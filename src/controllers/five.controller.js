@@ -16,7 +16,7 @@ const statusCode = require("../constants/statusCode.constant.js");
 const statusMessage = require("../constants/statusMessage.constant.js");
 
 const getListPosts = async (req, res) => {
-  const { token, user_id, in_campaign, camaign_id, latitude, longitude, last_id, index, count } = req.query;
+  var { token, user_id, in_campaign, camaign_id, latitude, longitude, last_id, index, count } = req.query;
   const { _id } = req.jwtDecoded.data;
   // check params
   try {
