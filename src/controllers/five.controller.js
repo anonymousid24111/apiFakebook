@@ -33,18 +33,38 @@ const getListPosts = async (req, res) => {
         populate: {
           path: "author",
           select: "avatar username"
+        },
+        options: {
+          sort: {
+            created: -1
+          }
         }
+        
       }
-    }).limit(count).sort({ created: 1 });
+    });
     var postRes=[];
     result.friends.map((e,index)=>{
       postRes = postRes.concat(e.postIds);
       // console.log(postRes)
-    })
+    });
+    function checkAdult(post) {
+      return post._id == last_id;
+    }
+    var findLastIndex =postRes.findIndex(checkAdult);
+    var new_items=0;
+    var newLastIndex;
+    if(findLastIndex==-1){
+      new_items= postRes.length;
+      // newLastIndex
+    }else{
+      new_items= findLastIndex;
+    }
     return res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
-      data: postRes.slice(index, index+count)
+      data: postRes.slice(index, index+count),
+      last_id: postRes[0]._id,
+      new_items: new_items
     })
   } catch (error) {
     if (error.message == "params") {
