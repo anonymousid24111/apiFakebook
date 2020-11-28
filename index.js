@@ -41,7 +41,7 @@ const port = process.env.PORT || 3000;
 const firstParamsRoute = process.env.FIRST_PARAMS_ROUTE || "it4788";
 
 // const app = express();
-app.use(cors())
+app.use(cors());
 app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 

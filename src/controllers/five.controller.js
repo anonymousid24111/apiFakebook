@@ -20,20 +20,31 @@ const getListPosts = async (req, res) => {
   const { _id } = req.jwtDecoded.data;
   // check params
   try {
-    if (!index || !count || !latitude || !longitude) {
-      throw Error("params");
+    if (!index || !count ) {
+      // throw Error("params");
+      index = 0;
+      count = 20;
     }
     var result = await User.findById(_id).populate({
       path: "friends",
       select: "postIds",
       populate: {
-        path: "postIds"
+        path: "postIds",
+        populate: {
+          path: "author",
+          select: "avatar username"
+        }
       }
     }).limit(count).sort({ created: 1 });
+    var postRes=[];
+    result.friends.map((e,index)=>{
+      postRes = postRes.concat(e.postIds);
+      // console.log(postRes)
+    })
     return res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
-      data: result
+      data: postRes.slice(index, index+count)
     })
   } catch (error) {
     if (error.message == "params") {
@@ -47,6 +58,7 @@ const getListPosts = async (req, res) => {
         message: statusMessage.NO_DATA_OR_END_OF_LIST_DATA
       })
     } else {
+      console.log(error)
       return res.status(200).json({
         code: statusCode.UNKNOWN_ERROR,
         message: statusMessage.UNKNOWN_ERROR
