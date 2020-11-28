@@ -56,6 +56,9 @@ const getListPosts = async (req, res) => {
       postRes = postRes.concat(e.postIds);
       // console.log(postRes)
     });
+    if (postRes.length==0) {
+      throw Error("nodata");
+    }
     function checkAdult(post) {
       return post._id == last_id;
     }
@@ -100,30 +103,49 @@ const getListPosts = async (req, res) => {
 
 const checkNewItem = async (req, res) => {
   const { last_id, category_id } = req.query;
+  const { _id } = req.jwtDecoded.data;
   try {
-    if (!last_id || !category_id) {
-      throw Error("params");
+    var result = await User.findById(_id).populate({
+      path: "friends",
+      select: "postIds",
+      populate: {
+        path: "postIds",
+        populate: {
+          path: "author",
+          select: "avatar username",
+        },
+        options: {
+          sort: {
+            created: -1,
+          },
+        },
+      },
+    });
+    var postRes = [];
+    result.friends.map((e, index) => {
+      postRes = postRes.concat(e.postIds);
+      // console.log(postRes)
+    });
+    function checkAdult(post) {
+      return post._id == last_id;
     }
-    var postData = Post.find(
-      {},
-      (err,
-      (docs) => {
-        if (err) throw err;
-      })
-    ).sort({ created: 1 });
-    var dataRes = [];
-    // (await postData).forEach((element)=>{
-    //   if(postData._id==element){
-    //     // break;
-    //   }
-    //   else{
-    //     dataRes.push(element);
-    //   }
-    // })
+    var findLastIndex = postRes.findIndex(checkAdult);
+    var new_items = 0;
+    var newLastIndex;
+    if (findLastIndex == -1) {
+      new_items = postRes.length;
+      // newLastIndex
+    } else {
+      new_items = findLastIndex;
+    }
     return res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
-      data: dataRes,
+      data: {
+        posts: postRes.slice(index, index + count),
+        last_id: postRes[0]._id,
+        new_items: new_items,
+      },
     });
   } catch (error) {
     if (error.message == "params") {
