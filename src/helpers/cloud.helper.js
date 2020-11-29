@@ -15,7 +15,7 @@ let upload = (path, type) => {
         .then((result) => {
           // console.log(result)
           resolve({url: result.url,
-                  thumb: result.url.slice(0, result.url.lastIndexOf("."))+"png"});
+                  thumb: result.url.slice(0, result.url.lastIndexOf("."))+".png"});
         })
         .catch((error) => {
           console.log(error);

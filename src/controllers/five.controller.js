@@ -77,7 +77,7 @@ const getListPosts = async (req, res) => {
       data: {
         posts: postRes.slice(index, index + count),
         last_id: postRes[0]._id,
-        new_items: new_items,
+        new_items: postRes.length-count,
       },
     });
   } catch (error) {
@@ -110,10 +110,10 @@ const checkNewItem = async (req, res) => {
       select: "postIds",
       populate: {
         path: "postIds",
-        populate: {
-          path: "author",
-          select: "avatar username",
-        },
+        // populate: {
+        //   path: "author",
+        //   select: "avatar username",
+        // },
         options: {
           sort: {
             created: -1,
@@ -142,8 +142,8 @@ const checkNewItem = async (req, res) => {
       code: statusCode.OK,
       message: statusMessage.OK,
       data: {
-        posts: postRes.slice(index, index + count),
-        last_id: postRes[0]._id,
+        // posts: postRes.slice(index, index + count),
+        // last_id: postRes[0]._id,
         new_items: new_items,
       },
     });
