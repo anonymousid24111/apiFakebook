@@ -22,6 +22,7 @@ const postSchema = new mongoose.Schema({
   }],
   video: {
     // id:  Schema.Types.ObjectId,
+    thumb: String,
     url: String,
   },
   thumb: [{

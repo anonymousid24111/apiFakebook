@@ -13,7 +13,9 @@ let upload = (path, type) => {
       cloudinary.uploader
         .upload(path, { resource_type: "video" })
         .then((result) => {
-          resolve({url: result.url});
+          // console.log(result)
+          resolve({url: result.url,
+                  thumb: result.url.slice(0, result.url.lastIndexOf("."))+"png"});
         })
         .catch((error) => {
           console.log(error);

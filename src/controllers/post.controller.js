@@ -30,11 +30,13 @@ const addPost = async (req, res) => {
         await cloudHelper
           .upload(result.data[0], "video")
           .then(async (result2) => {
+            // console.log(result2)
             var newPost = await new Post({
               described: described,
               state: state,
               status: status,
               video: result2,
+              // thumbnail: {url: result2.url.slice(0, result2.length-3)+"png"},
               created: Date.now(),
               modified: Date.now(),
               like: 0,
