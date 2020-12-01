@@ -1,5 +1,5 @@
 require("dotenv").config();
-
+const express = require("express");
 const app = require("express")();
 const server = require("http").Server(app);
 const io = require("socket.io")(server);
@@ -42,8 +42,9 @@ const firstParamsRoute = process.env.FIRST_PARAMS_ROUTE || "it4788";
 
 // const app = express();
 app.use(cors());
-app.use(bodyParser.json()); // for parsing application/json
-app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
+app.use(bodyParser.json({limit: '50mb'})); // for parsing application/json
+app.use(bodyParser.urlencoded({limit: '50mb', extended: true })); // for parsing application/x-www-form-urlencoded
+app.use(express.json());
 
 app.all("/", (req, res) => {
   res.status(200).json({

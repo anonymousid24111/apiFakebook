@@ -113,7 +113,7 @@ const signup = async (req, res) => {
 };
 //doing here
 const login = async (req, res) => {
-  const { phonenumber, password, uuid } = req.query;// gửi bằng query params
+  const { phonenumber, password } = req.query;// gửi bằng query params
 
   try {
     if (validationPhonenumber(phonenumber) || validationPasword(password)) {
@@ -144,11 +144,7 @@ const login = async (req, res) => {
               $set: {
                 token: accessToken,
               },
-            },
-            (err, docs) => {
-              if (err) throw err;
-            }
-          );
+            });
           return res.status(200).json({
             code: statusCode.OK,
             message: statusMessage.OK,
@@ -163,9 +159,10 @@ const login = async (req, res) => {
         } else {
           // password không hợp lệ
           console.log("password không hợp lệ")
-          res.status(200).json({
+          return res.status(200).json({
             code: statusCode.USER_IS_NOT_VALIDATED,
             message: statusMessage.USER_IS_NOT_VALIDATED,
+            server: "password không hợp lệ"
           });
         }
       } else {
@@ -174,25 +171,24 @@ const login = async (req, res) => {
         res.status(200).json({
           code: statusCode.USER_IS_NOT_VALIDATED,
           message: statusMessage.USER_IS_NOT_VALIDATED,
+          server: "phonenumber chưa được đăng kí"
         });
       }
     }
   } catch (error) {
+    console.log(error)
     if (error.message == "PARAMETER_VALUE_IS_INVALID") {
-      console.log(error)
       return res.status(200).json({
         code: statusCode.PARAMETER_VALUE_IS_INVALID,
         message: statusMessage.PARAMETER_VALUE_IS_INVALID,
       });
     } else {
-      console.log(error)
       return res.status(200).json({
         code: statusCode.UNKNOWN_ERROR,
         message: statusMessage.UNKNOWN_ERROR,
       });
     }
   }
-
 };
 
 
@@ -248,9 +244,7 @@ const checkVerifyCode = async (req, res) => {
 
 module.exports = {
   login,
-  // refreshToken,
   signup,
   getVerifyCode,
   checkVerifyCode,
-  // changeInfoAfterSignup, // move to user.controller.js
 };

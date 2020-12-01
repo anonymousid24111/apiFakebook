@@ -74,6 +74,10 @@ const userSchema = new mongoose.Schema({
       ref: "chat",
     },
   ],
+  notifications:[{
+    type: Schema.Types.ObjectId,
+    ref: "notification",
+  }]
 });
 
 const User = mongoose.model("user", userSchema);

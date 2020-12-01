@@ -19,115 +19,94 @@ const statusMessage = require("./../constants/statusMessage.constant.js");
 // const { uploadImage } = require("../helpers/cloud.helper.js");
 
 const addPost = async (req, res) => {
-  const { token, image, video, described, state, can_edit, status } = req.query;
-  const { _id, phonenumber } = req.jwtDecoded.data;
+  const { token, described, state, can_edit, status } = req.query;
+  const { _id } = req.jwtDecoded.data;
   // validate input
-  formidableHelper
-    .parse(req)
-    .then(async (result) => {
-      // console.log(result)
-      if (result.type == "video") {
-        await cloudHelper
-          .upload(result.data[0], "video")
-          .then(async (result2) => {
-            // console.log(result2)
-            var newPost = await new Post({
-              described: described,
-              state: state,
-              status: status,
-              video: result2,
-              // thumbnail: {url: result2.url.slice(0, result2.length-3)+"png"},
-              created: Date.now(),
-              modified: Date.now(),
-              like: 0,
-              is_liked: false,
-              comment: 0,
-              author: _id,
-            }).save();
-            await User.findOneAndUpdate({_id: _id}, {
-              $push: {
-                postIds: newPost._id
-              }
-            })
-            return res.status(200).json({
-              code: statusCode.OK,
-              message: statusMessage.OK,
-              data: newPost,
-            });
-          })
-          .catch((err) => {
-            console.log(err);
-            return res.status(200).json({
-              code: statusCode.UNKNOWN_ERROR,
-              message: statusMessage.UNKNOWN_ERROR,
-            });
-          });
-      } else if (result.type == "image") {
-        Promise.all(
-          result.data.map((element) => {
-            return cloudHelper.upload(element);
-          })
-        )
-          .then(async (result2) => {
-            console.log(result2);
-            var newPost = await new Post({
-              described: described,
-              state: state,
-              status: status,
-              image: result2,
-              created: Date.now(),
-              modified: Date.now(),
-              like: 0,
-              is_liked: false,
-              comment: 0,
-              author: _id,
-            }).save();
-            return res.status(200).json({
-              code: statusCode.OK,
-              message: statusMessage.OK,
-              data: newPost,
-            });
-          })
-          .catch((err) => {
-            console.log(err);
-            return res.status(200).json({
-              code: statusCode.UNKNOWN_ERROR,
-              message: statusMessage.UNKNOWN_ERROR,
-            });
-          });
-      } else if (result.type == "null") {
-        var newPost = await new Post({
-          described: described,
-          state: state,
-          status: status,
-          created: Date.now(),
-          modified: Date.now(),
-          like: 0,
-          is_liked: false,
-          comment: 0,
-          author: _id,
-        }).save();
-        return res.status(200).json({
-          code: statusCode.OK,
-          message: statusMessage.OK,
-          data: newPost,
-        });
-      }
-    })
-    .catch((err) => {
-      console.log(err);
-      if (err == statusCode.FILE_SIZE_IS_TOO_BIG) {
-        return res.status(200).json({
-          code: statusCode.FILE_SIZE_IS_TOO_BIG,
-          message: statusMessage.FILE_SIZE_IS_TOO_BIG,
-        });
-      } else {
-        return res.status(200).json({
-          code: statusCode.UNKNOWN_ERROR,
-          message: statusMessage.UNKNOWN_ERROR,
-        });
-      }
-    });
+  try {
+    var result = await formidableHelper.parse(req);
+    if (result.type == "video") {
+      var result2 = await cloudHelper.upload(result.data[0], "video");
+      var newPost = await new Post({
+        described: described,
+        state: state,
+        status: status,
+        video: result2,
+        // thumbnail: {url: result2.url.slice(0, result2.length-3)+"png"},
+        created: Date.now(),
+        modified: Date.now(),
+        like: 0,
+        is_liked: false,
+        comment: 0,
+        author: _id,
+      }).save();
+      await User.findOneAndUpdate(
+        { _id: _id },
+        {
+          $push: {
+            postIds: newPost._id,
+          },
+        }
+      );
+      return res.status(200).json({
+        code: statusCode.OK,
+        message: statusMessage.OK,
+        data: newPost,
+      });
+    } else if (result.type == "image") {
+      var result2 = await Promise.all(
+        result.data.map((element) => {
+          return cloudHelper.upload(element);
+        })
+      );
+      var newPost = await new Post({
+        described: described,
+        state: state,
+        status: status,
+        image: result2,
+        created: Date.now(),
+        modified: Date.now(),
+        like: 0,
+        is_liked: false,
+        comment: 0,
+        author: _id,
+      }).save();
+      return res.status(200).json({
+        code: statusCode.OK,
+        message: statusMessage.OK,
+        data: newPost,
+      });
+    } else {
+      var newPost = await new Post({
+        described: described,
+        state: state,
+        status: status,
+        created: Date.now(),
+        modified: Date.now(),
+        like: 0,
+        is_liked: false,
+        comment: 0,
+        author: _id,
+      }).save();
+      return res.status(200).json({
+        code: statusCode.OK,
+        message: statusMessage.OK,
+        data: newPost,
+      });
+    }
+  } catch (error) {
+    if (error == statusCode.FILE_SIZE_IS_TOO_BIG) {
+      return res.status(200).json({
+        code: statusCode.FILE_SIZE_IS_TOO_BIG,
+        message: statusMessage.FILE_SIZE_IS_TOO_BIG,
+        server: "file qua lon hoac qua nhieu file",
+      });
+    } else {
+      return res.status(200).json({
+        code: statusCode.UNKNOWN_ERROR,
+        message: statusMessage.UNKNOWN_ERROR,
+      });
+    }
+  }
 };
 
 const getPost = async (req, res) => {
@@ -136,40 +115,33 @@ const getPost = async (req, res) => {
   try {
     if (!id) {
       throw Error("PARAMETER_VALUE_IS_INVALID");
-    } else {
-      var result = await Post.findOne({ _id: id }).populate({
-        path: "author",
-        select: "_id username avatar",
-      });
-      console.log(result);
-      if (!result || result.is_blocked) {
-        // không tìm thấy bài viết hoặc vi phạm tiêu chuẩn cộng đồng
-        throw Error("POST_IS_NOT_EXISTED");
-      } else {
-        var resultUser = await User.findOne({ _id: result.author._id });
-        var block = false;
-        await resultUser.blockedIds.forEach((element) => {
-          if (element == _id) {
-            block = true;
-          }
-        });
-        if (block) {
-          return res.status(200).json({
-            code: statusCode.OK,
-            message: statusMessage.OK,
-            data: {
-              isblocked: 1,
-            },
-          });
-        } else {
-          return res.status(200).json({
-            code: statusCode.OK,
-            message: statusMessage.OK,
-            data: result,
-          });
-        }
-      }
     }
+    var result = await Post.findOne({ _id: id }).populate({
+      path: "author",
+      select: "_id username avatar",
+    });
+    // console.log(result);
+    if (!result || result.is_blocked) {
+      // không tìm thấy bài viết hoặc vi phạm tiêu chuẩn cộng đồng
+      throw Error("POST_IS_NOT_EXISTED");
+    }
+    var resultUser = await User.findOne({ _id: result.author._id });
+    if (resultUser.blockedIds.includes(_id)) {
+      return res.status(200).json({
+        code: statusCode.OK,
+        message: statusMessage.OK,
+        data: {
+          isblocked: 1,
+        },
+      });
+    } else {
+      return res.status(200).json({
+        code: statusCode.OK,
+        message: statusMessage.OK,
+        data: result,
+      });
+    }
+    // }
   } catch (error) {
     console.log(error.message);
     if (error.message == "POST_IS_NOT_EXISTED") {
@@ -188,7 +160,6 @@ const getPost = async (req, res) => {
 
 const editPost = async (req, res) => {
   const {
-    token,
     id,
     described,
     status,
@@ -211,9 +182,7 @@ const editPost = async (req, res) => {
     ) {
       throw Error("params");
     }
-    const postData = await Post.findOne({ _id: id }, (err, docs) => {
-      if (err) throw err;
-    });
+    const postData = await Post.findOne({ _id: id });
     formidableHelper
       .parse(req, postData)
       .then(async (result) => {
@@ -312,7 +281,7 @@ const editPost = async (req, res) => {
 };
 
 const deletePost = async (req, res) => {
-  const { token, id } = req.query;
+  const { id } = req.query;
   const { _id } = req.jwtDecoded.data;
   try {
     var result = await Post.findOneAndDelete({
@@ -332,6 +301,7 @@ const deletePost = async (req, res) => {
       return res.status(200).json({
         code: statusCode.POST_IS_NOT_EXISTED,
         message: statusMessage.POST_IS_NOT_EXISTED,
+        server: "khong tim thay bai viet",
       });
     } else {
       return res.status(200).json({
@@ -343,55 +313,53 @@ const deletePost = async (req, res) => {
 };
 
 const reportPost = async (req, res) => {
-  const { token, id, subject, details } = req.query;
+  const { id, subject, details } = req.query;
   try {
-    var result = await Post.findOne({ _id: id }, (err, docs) => {
-      if (err) throw err;
-    });
+    var result = await Post.findOne({ _id: id });
     if (!result) {
       throw Error("notfound");
     } else if (result.is_blocked) {
       throw Error("blocked");
-    } else {
-      await new ReportPost({
-        id: id,
-        subject: subject,
-        details: details,
-      }).save();
-      return res.status(200).json({
-        code: statusCode.OK,
-        message: statusMessage.OK,
-      });
     }
+    await new ReportPost({
+      id: id,
+      subject: subject,
+      details: details,
+    }).save();
+    return res.status(200).json({
+      code: statusCode.OK,
+      message: statusMessage.OK,
+    });
   } catch (error) {
     if (error.message == "notfound") {
       return res.status(200).json({
         code: statusCode.POST_IS_NOT_EXISTED,
         message: statusMessage.POST_IS_NOT_EXISTED,
+        server: "khong tim thay bai viet",
       });
     } else if (error.message == "blocked") {
       return res.status(200).json({
         code: statusCode.ACTION_HAS_BEEN_DONE_PREVIOUSLY_BY_THIS_USER,
         message: statusMessage.ACTION_HAS_BEEN_DONE_PREVIOUSLY_BY_THIS_USER,
+        server: "biet viet da bi block",
       });
     } else {
       return res.status(200).json({
         code: statusCode.UNKNOWN_ERROR,
         message: statusMessage.UNKNOWN_ERROR,
+        server: "loi khong xac dinh",
       });
     }
   }
 };
 
 const like = async (req, res) => {
-  const { token, id } = req.query;
+  const { id } = req.query;
   const { _id } = req.jwtDecoded.data;
 
   try {
     // tim post theo id
-    var result = await Post.findOne({ _id: id }, (err, docs) => {
-      if (err) throw err;
-    });
+    var result = await Post.findOne({ _id: id });
     // neu khong co thi bao loi
     if (!result) {
       throw Error("notfound");
@@ -437,38 +405,39 @@ const like = async (req, res) => {
       });
     }
   } catch (error) {
+    console.log(error.message);
     if (error.message == "isblocked") {
-      console.log(error.message);
       return res.status(200).json({
         code: statusCode.ACTION_HAS_BEEN_DONE_PREVIOUSLY_BY_THIS_USER,
         message: statusMessage.ACTION_HAS_BEEN_DONE_PREVIOUSLY_BY_THIS_USER,
+        server: "bai viet bi block",
       });
     } else if (error.message == "notfound") {
-      console.log(error.message);
       return res.status(200).json({
         code: statusCode.POST_IS_NOT_EXISTED,
         message: statusMessage.POST_IS_NOT_EXISTED,
+        server: "khong tim thay bai viet",
       });
     } else {
-      console.log(error.message);
       return res.status(200).json({
         code: statusCode.UNKNOWN_ERROR,
         message: statusMessage.UNKNOWN_ERROR,
+        server: "loi khong xac dinh",
       });
     }
   }
-
-  // return res.status(200);
 };
 
 const getComment = async (req, res) => {
-  const { token, id, count, index } = req.query;
+  var { id, count, index } = req.query;
   const { _id } = req.jwtDecoded.data;
   try {
     // kiểm tra input có null không
-    if (!count || !index) {
+    if (!id) {
       throw Error("params");
     }
+    index = index ? index : 0;
+    count = count ? count : 20;
     // tìm post theo id
     var postData = await Post.findOne({ _id: id }).populate({
       path: "comment_list",
@@ -497,7 +466,7 @@ const getComment = async (req, res) => {
         throw Error("userblock");
       }
       // nếu all ok
-      Promise.all(
+      var result3 = await Promise.all(
         postData.comment_list.map(async (element) => {
           const authorDataComment = await User.findOne({
             _id: element.poster,
@@ -512,52 +481,56 @@ const getComment = async (req, res) => {
             return Promise.resolve(element);
           }
         })
-      ).then((result3) => {
-        console.log(result3);
-        return res.status(200).json({
-          code: statusCode.OK,
-          message: statusMessage.OK,
-          data: result3,
-        });
+      );
+      return res.status(200).json({
+        code: statusCode.OK,
+        message: statusMessage.OK,
+        data: result3,
       });
     }
   } catch (err) {
     console.log(err);
     if (err.message == "params") {
-      console.log("loi tham so");
+      // console.log("loi tham so");
       return res.status(200).json({
         code: statusCode.PARAMETER_VALUE_IS_INVALID,
         message: statusMessage.PARAMETER_VALUE_IS_INVALID,
+        server: "loi tham so"
       });
     } else if (err.message == "notfound") {
       console.log("notfound");
       return res.status(200).json({
         code: statusCode.POST_IS_NOT_EXISTED,
         message: statusMessage.POST_IS_NOT_EXISTED,
+        server: "bai viet khong ton tai"
       });
     } else if (err.message == "blocked") {
       console.log("post is blocked");
       return res.status(200).json({
         code: statusCode.ACTION_HAS_BEEN_DONE_PREVIOUSLY_BY_THIS_USER,
         message: statusMessage.ACTION_HAS_BEEN_DONE_PREVIOUSLY_BY_THIS_USER,
+        server: "bai viet bi khoa"
       });
     } else if (err.message == "authorblock") {
       console.log("authorblock");
       return res.status(200).json({
         code: statusCode.NOT_ACCESS,
         message: statusMessage.NOT_ACCESS,
+        server: "ban bi chu bai viet block"
       });
     } else if (err.message == "userblock") {
       console.log("userblock");
       return res.status(200).json({
         code: statusCode.NOT_ACCESS,
         message: statusMessage.NOT_ACCESS,
+        server: "ban block chu bai viet"
       });
     } else {
       console.log("unknown error");
       return res.status(200).json({
         code: statusCode.UNKNOWN_ERROR,
         message: statusMessage.UNKNOWN_ERROR,
+        server: "loi khong xac dinh"
       });
     }
   }
@@ -566,17 +539,18 @@ const getComment = async (req, res) => {
 };
 
 const setComment = async (req, res) => {
-  const { token, id, comment, index, count } = req.query;
+  const { id, comment, index, count } = req.query;
   const { _id } = req.jwtDecoded.data;
+
   // check params
   try {
-    if (!comment || !id || !index || !count) {
+    if (!comment || !id ) {
       throw Error("params");
     }
+    index = index ? index : 0;
+    count = count ? count : 20;
     // tim bai viet
-    var result = await Post.findOne({ _id: id }, (err, docs) => {
-      if (err) throw err;
-    });
+    var result = await Post.findOne({ _id: id });
     // neu khong tim thay bai viet
     if (!result) {
       throw Error("notfound");

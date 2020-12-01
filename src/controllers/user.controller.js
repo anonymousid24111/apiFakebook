@@ -11,24 +11,23 @@ const statusMessage = require("./../constants/statusMessage.constant.js");
 const logout = async (req, res) => {
   const { token } = req.query;
   const { _id } = req.jwtDecoded.data;
-  await User.findByIdAndUpdate(_id, {
-    $set: {
-      token: null
-    }
-  }, (err, docs) => {
-    if (err) {
-      console.log(err);
+  try {
+    var userData = await User.findByIdAndUpdate(_id, {
+      $set: {
+        token: null
+      }
+    });
+    return res.status(200).json({
+      code: statusCode.OK,
+      message: statusMessage.OK,
+      data: userData,
+    })
+  } catch (error) {
       return res.status(200).json({
         code: statusCode.UNKNOWN_ERROR,
         message: statusMessage.UNKNOWN_ERROR,
       })
-    } else {
-      return res.status(200).json({
-        code: statusCode.OK,
-        message: statusMessage.OK,
-      })
-    }
-  })
+  }
 }
 
 const changeInfoAfterSignup = async (req, res) => {

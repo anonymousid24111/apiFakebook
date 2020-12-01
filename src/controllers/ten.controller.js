@@ -132,20 +132,44 @@ const getUserInfo = async (req, res) => {
   }
 };
 
-const getUserFriends = async (req, res) => {
-  const { token } = req.query;
+const getNotification = async (req, res) => {
+  const { token, index, count } = req.query;
+  const {_id}= req.jwtDecoded.data;
   try {
+    index=index?index:0; 
+    count=count?count:20;
+    
     var userData = await User.findById(_id).populate({
-      path: "friends",
-      select: "username avatar",
+      path: "notifications",
+      // select: "username avatar",
     });
     return res.status(500).json({
       code: statusCode.OK,
       message: statusMessage.OK,
-      data: {
-        friend: userData.friends,
-        total: "total",
-      },
+      data: userData.notifications,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      code: statusCode.UNKNOWN_ERROR,
+      message: statusMessage.UNKNOWN_ERROR,
+    });
+  }
+};
+
+const setReadNotification = async (req, res) => {
+  const { token, notification_id } = req.query;
+  const {_id}= req.jwtDecoded.data;
+  try {
+    // var userData = await User.findByIdAndUpdate(_id, {
+
+    // }).populate({
+    //   path: "notifications",
+    //   // select: "username avatar",
+    // });
+    return res.status(500).json({
+      code: statusCode.OK,
+      message: statusMessage.OK,
+      data: userData.notifications,
     });
   } catch (error) {
     return res.status(500).json({
@@ -158,5 +182,6 @@ const getUserFriends = async (req, res) => {
 module.exports = {
   setUserInfo,
   getUserInfo,
-  // getUserFriends
+  getNotification,
+  setReadNotification
 };
