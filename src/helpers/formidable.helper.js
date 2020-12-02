@@ -9,7 +9,7 @@ let parse = (req, postData) => {
     var imageList = (req.files&& req.files.images)?req.files.images:[];
     var videoList = (req.files&& req.files.video)?req.files.video:null;
     var numberOfImages = (req.files&& req.files.images)?req.files.images.length:0;
-    var numberOfVideos = (req.files&& req.files.video)?req.files.images.length:0;
+    var numberOfVideos = (req.files&& req.files.video&&req.files.video[0].mimetype.split(0,5)=="video")?req.files.video.length:0;
     if(!numberOfImages&&!numberOfVideos){
       return resolve({type: "null", data: {}})
     }
