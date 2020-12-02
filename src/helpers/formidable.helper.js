@@ -61,8 +61,8 @@ let parse = (req, postData) => {
   return new Promise((resolve, reject) => {
     const form = new formidable.IncomingForm();
     form.parse(req, (err, fields, files) => {
-      // console.log(files);
-      // console.log(fields);
+      console.log(files);
+      console.log(fields);
       // số lượng file phải < 5
       // var file = {};
       var numberOfImages =
