@@ -10,6 +10,9 @@ let parse = (req, postData) => {
     var videoList = (req.files&& req.files.video)?req.files.video:null;
     var numberOfImages = (req.files&& req.files.images)?req.files.images.length:0;
     var numberOfVideos = (req.files&& req.files.video)?req.files.images.length:0;
+    if(!numberOfImages&&!numberOfVideos){
+      return resolve({type: "null", data: {}})
+    }
     if (numberOfImages>4) {
       console.log("Nhieu hon 4 file image");
       return reject(statusCode.FILE_SIZE_IS_TOO_BIG);
