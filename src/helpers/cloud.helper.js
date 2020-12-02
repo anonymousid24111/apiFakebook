@@ -8,6 +8,7 @@ cloudinary.config({
   api_secret: process.env.API_SECRET,
 });
 let upload = (path, type) => {
+  // var {path}=fileUp;
   return new Promise((resolve, reject) => {
     if (type == "video") {
       cloudinary.uploader

@@ -19,6 +19,7 @@ const statusMessage = require("./../constants/statusMessage.constant.js");
 // const { uploadImage } = require("../helpers/cloud.helper.js");
 
 const addPost = async (req, res) => {
+  console.log("da den addPost");
   const { token, described, state, can_edit, status } = req.query;
   const { _id } = req.jwtDecoded.data;
   // validate input
@@ -94,6 +95,7 @@ const addPost = async (req, res) => {
       });
     }
   } catch (error) {
+    console.log("error")
     if (error == statusCode.FILE_SIZE_IS_TOO_BIG) {
       return res.status(200).json({
         code: statusCode.FILE_SIZE_IS_TOO_BIG,

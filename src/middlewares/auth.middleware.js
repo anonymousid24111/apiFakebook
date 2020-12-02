@@ -40,12 +40,14 @@ let isAuth = async (req, res, next) => {
       return res.status(401).json({
         code: statusCode.PARAMETER_VALUE_IS_INVALID,
         message: statusMessage.PARAMETER_VALUE_IS_INVALID,
+        server: "Lỗi token không hợp lệ"
       });
     }
   } else {
     return res.status(403).json({
       code: statusCode.PARAMETER_VALUE_IS_INVALID,
       message: statusMessage.PARAMETER_VALUE_IS_INVALID,
+      server: "Lỗi token không hợp lệ"
     });
   }
 };

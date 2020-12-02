@@ -4,10 +4,65 @@ const { getVideoDurationInSeconds } = require("get-video-duration");
 const statusCode = require("../constants/statusCode.constant");
 // const fs = require("fs");
 const cloud = require("./cloud.helper");
+let parseNew = (req, postData) => {
+  return new Promise(async (resolve, reject) => {
+    var imageList = (req.files&& req.files.images)?req.files.images:[];
+    var videoList = (req.files&& req.files.video)?req.files.video:null;
+    var numberOfImages = (req.files&& req.files.images)?req.files.images.length:0;
+    var numberOfVideos = (req.files&& req.files.video&&req.files.video[0].mimetype.split(0,5)=="video")?req.files.video.length:0;
+    if(!numberOfImages&&!numberOfVideos){
+      return resolve({type: "null", data: {}})
+    }
+    if (numberOfImages>4) {
+      console.log("Nhieu hon 4 file image");
+      return reject(statusCode.FILE_SIZE_IS_TOO_BIG);
+    }
+    if (numberOfVideos>1){
+      console.log("Nhieu hon 1 file video");
+      return reject(statusCode.FILE_SIZE_IS_TOO_BIG);
+    }
+    if (numberOfImages>0&&numberOfVideos>0){
+      console.log("Co ca video lan image");
+      return reject(statusCode.FILE_SIZE_IS_TOO_BIG);
+    }
+    // console.log(imageList)
+    function checkAdult(e) {
+      return e.size>4*1024*1024;
+    }
+    var isTooSize = imageList.find(checkAdult);
+    if (isTooSize) {
+      console.log("file anh qua lon", isTooSize);
+      return reject(statusCode.FILE_SIZE_IS_TOO_BIG);
+    }
+    if (videoList&&videoList[0].size<1024*1024&&videoList[0].size>10*1024*1024) {
+      console.log("file video qua lon hoac qua nho");
+      return reject(statusCode.FILE_SIZE_IS_TOO_BIG);
+    }
+    var duration;
+    if (videoList) {
+      duration = await getVideoDurationInSeconds(videoList[0].path)
+    }
+    if (duration < 1 || duration > 10) {
+      console.log("thời lượng video <1s hoặc lớn hơn 10s");
+      return reject(statusCode.FILE_SIZE_IS_TOO_BIG);
+    }
+    if (numberOfImages>0) {
+      resolve({ type: "image", data: imageList });
+    }
+    if (numberOfVideos>0) {
+      resolve({ type: "video", data: videoList });
+    }
+
+  });
+};
+
 let parse = (req, postData) => {
+  // console.log
   return new Promise((resolve, reject) => {
     const form = new formidable.IncomingForm();
     form.parse(req, (err, fields, files) => {
+      // console.log(files);
+      // console.log(fields);
       // số lượng file phải < 5
       // var file = {};
       var numberOfImages =
@@ -82,7 +137,6 @@ let parse = (req, postData) => {
     });
   });
 };
-
 let parseInfo = (req) => {
   return new Promise((resolve, reject) => {
     const form = new formidable.IncomingForm();
@@ -90,20 +144,19 @@ let parseInfo = (req) => {
       if (err) {
         return reject(err);
       } else {
-        if (!files.avatar&&!files.cover_image) {
+        if (!files.avatar && !files.cover_image) {
           console.log("khong co file nao");
           return reject("no file");
         }
         if (
-          (files.avatar&& files.avatar.size > 1024 * 1024 * 4) ||
-          (files.cover_image&&files.cover_image.size > 1024 * 1024 * 4)
+          (files.avatar && files.avatar.size > 1024 * 1024 * 4) ||
+          (files.cover_image && files.cover_image.size > 1024 * 1024 * 4)
         ) {
           console.log("quá 4mb dung lượng tối đa cho phép");
           return reject("file size is to big");
         }
         var result, result2;
         if (files.avatar) {
-          
           const oldpath = files.avatar.path;
           const typeFile = files.avatar.type.split("/")[1]; //tách lấy kiểu của file mà người dùng gửi lên
           if (!(typeFile == "jpg" || typeFile == "jpeg" || typeFile == "png")) {
@@ -111,13 +164,14 @@ let parseInfo = (req) => {
             console.log("File không đúng định dạng");
             return reject("file k phu hop");
           }
-         result = await cloud.upload(oldpath);
+          result = await cloud.upload(oldpath);
         }
         if (files.cover_image) {
-          
           const oldpath2 = files.cover_image.path;
           const typeFile2 = files.cover_image.type.split("/")[1]; //tách lấy kiểu của file mà người dùng gửi lên
-          if (!(typeFile2 == "jpg" || typeFile2 == "jpeg" || typeFile2 == "png")) {
+          if (
+            !(typeFile2 == "jpg" || typeFile2 == "jpeg" || typeFile2 == "png")
+          ) {
             //không đúng định dạng
             console.log("File không đúng định dạng");
             return reject("file k phu hop");
@@ -132,5 +186,5 @@ let parseInfo = (req) => {
 
 module.exports = {
   parse: parse,
-  parseInfo: parseInfo
+  parseInfo: parseInfo,
 };

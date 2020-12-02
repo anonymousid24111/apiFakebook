@@ -7,6 +7,8 @@ const bodyParser = require("body-parser");
 const formidable = require("formidable");
 const fs = require("fs");
 var cors = require('cors');
+var multer  = require('multer')
+var upload = multer({ dest: 'uploads/' })
 // const ThumbnailGenerator = require('video-thumbnail-generator').default;
 const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
 const ffmpeg = require("fluent-ffmpeg");
@@ -45,7 +47,8 @@ app.use(cors());
 app.use(bodyParser.json({limit: '50mb'})); // for parsing application/json
 app.use(bodyParser.urlencoded({limit: '50mb', extended: true })); // for parsing application/x-www-form-urlencoded
 app.use(express.json());
-
+// var cpUpload = upload.fields([{ name: 'images', maxCount: 4 }, { name: 'video', maxCount: 1 }, {name: 'avatar', maxCount: 1}]);
+// app.use(cpUpload);
 app.all("/", (req, res) => {
   res.status(200).json({
     code: 1000,
@@ -54,30 +57,13 @@ app.all("/", (req, res) => {
 });
 
 app.post("/fileupload", (req, res) => {
-  var form = new formidable.IncomingForm();
-  form.parse(req, function (err, fields, files) {
-    // console.log(files.filetoupload, fields)
-    var oldpath = files.filetoupload.path;
-    var newpath = "upload/" + files.filetoupload.name;
-    var proc = ffmpeg(oldpath)
-      .on("filenames", function (filenames) {
-        console.log("Will generate " + filenames.join(", "));
-      })
-      .on("end", function () {
-        console.log("Screenshots taken");
-      })
-      .screenshots({
-        // Will take screens at 20%, 40%, 60% and 80% of the video
-        count: 4,
-        folder: "/upload",
-      });
-    console.log(proc);
+    console.log(req.files);
     // fs.rename(oldpath, newpath, function (err) {
     //   if (err) throw err;
     res.write("File uploaded and moved!");
     return res.end();
     // });
-  });
+  // });
 });
 
 app.use(`/${firstParamsRoute}`, authRoute);
