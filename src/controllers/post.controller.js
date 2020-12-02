@@ -94,6 +94,7 @@ const addPost = async (req, res) => {
       });
     }
   } catch (error) {
+    console.log(error)
     if (error == statusCode.FILE_SIZE_IS_TOO_BIG) {
       return res.status(200).json({
         code: statusCode.FILE_SIZE_IS_TOO_BIG,
