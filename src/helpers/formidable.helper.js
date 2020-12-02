@@ -4,7 +4,7 @@ const { getVideoDurationInSeconds } = require("get-video-duration");
 const statusCode = require("../constants/statusCode.constant");
 // const fs = require("fs");
 const cloud = require("./cloud.helper");
-let parse = (req, postData) => {
+let parseNew = (req, postData) => {
   return new Promise(async (resolve, reject) => {
     var imageList = (req.files&& req.files.images)?req.files.images:[];
     var videoList = (req.files&& req.files.video)?req.files.video:null;
@@ -56,10 +56,13 @@ let parse = (req, postData) => {
   });
 };
 
-let parseOld = (req, postData) => {
+let parse = (req, postData) => {
+  // console.log
   return new Promise((resolve, reject) => {
     const form = new formidable.IncomingForm();
     form.parse(req, (err, fields, files) => {
+      console.log(files);
+      console.log(fields);
       // số lượng file phải < 5
       // var file = {};
       var numberOfImages =
