@@ -4,13 +4,14 @@ const { getVideoDurationInSeconds } = require("get-video-duration");
 const statusCode = require("../constants/statusCode.constant");
 // const fs = require("fs");
 const cloud = require("./cloud.helper");
-let parseNew = (req, postData) => {
+let parse = (req, postData) => {
   return new Promise(async (resolve, reject) => {
-    var imageList = (req.files&& req.files.images)?req.files.images:[];
+    var imageList = (req.files&& req.files["images[]"])?req.files["images[]"]:[];
     var videoList = (req.files&& req.files.video)?req.files.video:null;
-    var numberOfImages = (req.files&& req.files.images)?req.files.images.length:0;
-    var numberOfVideos = (req.files&& req.files.video&&req.files.video[0].mimetype.split(0,5)=="video")?req.files.video.length:0;
+    var numberOfImages = (req.files&& req.files["images[]"])?req.files["images[]"].length:0;
+    var numberOfVideos = (req.files&& req.files.video&&req.files.video[0].mimetype.slice(0,5)=="video")?req.files.video.length:0;
     if(!numberOfImages&&!numberOfVideos){
+      console.log("khong co anh va video")
       return resolve({type: "null", data: {}})
     }
     if (numberOfImages>4) {
@@ -56,7 +57,7 @@ let parseNew = (req, postData) => {
   });
 };
 
-let parse = (req, postData) => {
+let parseOld = (req, postData) => {
   // console.log
   return new Promise((resolve, reject) => {
     const form = new formidable.IncomingForm();
