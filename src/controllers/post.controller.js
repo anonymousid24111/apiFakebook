@@ -16,9 +16,25 @@ const cloudHelper = require("../helpers/cloud.helper.js");
 
 const statusCode = require("./../constants/statusCode.constant.js");
 const statusMessage = require("./../constants/statusMessage.constant.js");
+const { Mongoose } = require("mongoose");
 // const { uploadImage } = require("../helpers/cloud.helper.js");
-
+const deletePostAll = async (req, res)=>{
+  var userAll = await User.find({});
+  await Promise.all(userAll.map(userData=>{
+    return User.findByIdAndUpdate(userData._id, {
+      $set:{
+        postIds: []
+      }
+    })
+  }))
+  // userAll.save();
+  await Post.deleteMany({_id:{$ne: null}});
+  res.status(200).json({
+    message: "drop ok"
+  })
+}
 const addPost = async (req, res) => {
+  console.log(req.files)
   const { token, described, state, can_edit, status } = req.query;
   const { _id } = req.jwtDecoded.data;
   // validate input
@@ -642,4 +658,5 @@ module.exports = {
   like,
   getComment,
   setComment,
+  deletePostAll
 };
