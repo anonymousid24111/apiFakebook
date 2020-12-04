@@ -382,12 +382,14 @@ const like = async (req, res) => {
     // nếu user đã like
     if (result.like_list.includes(String(_id))) {
       // xoá user id khỏi danh sách đã like của post
+      var isLiked = result.author==_id?false:result.is_liked
       await Post.findByIdAndUpdate(id, {
         $pull: {
           like_list: _id,
         },
         $set: {
           like: result.like - 1,
+          is_liked: isLiked
         },
       });
       return res.status(200).json({
@@ -395,16 +397,19 @@ const like = async (req, res) => {
         message: statusMessage.OK,
         data: {
           like: result.like - 1,
+          is_liked: isLiked
         },
       });
     } else {
       // nếu user chưa like thì thêm user id vào danh sách post
+      var isLiked = result.author==_id?true:result.is_liked
       await Post.findByIdAndUpdate(id, {
         $push: {
           like_list: _id,
         },
         $set: {
           like: result.like + 1,
+          is_liked: isLiked
         },
       });
       return res.status(200).json({
@@ -412,6 +417,7 @@ const like = async (req, res) => {
         message: statusMessage.OK,
         data: {
           like: result.like + 1,
+          is_liked: isLiked
         },
       });
     }
@@ -550,7 +556,7 @@ const getComment = async (req, res) => {
 };
 
 const setComment = async (req, res) => {
-  const { id, comment, index, count } = req.query;
+  var { id, comment, index, count } = req.query;
   const { _id } = req.jwtDecoded.data;
 
   // check params
