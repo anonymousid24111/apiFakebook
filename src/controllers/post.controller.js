@@ -39,10 +39,11 @@ const addPost = async (req, res) => {
   const { _id } = req.jwtDecoded.data;
   // validate input
   try {
+    var newPost;
     var result = await formidableHelper.parse(req);
     if (result.type == "video") {
       var result2 = await cloudHelper.upload(result.data[0], "video");
-      var newPost = await new Post({
+      newPost = await new Post({
         described: described,
         state: state,
         status: status,
@@ -55,26 +56,14 @@ const addPost = async (req, res) => {
         comment: 0,
         author: _id,
       }).save();
-      await User.findOneAndUpdate(
-        { _id: _id },
-        {
-          $push: {
-            postIds: newPost._id,
-          },
-        }
-      );
-      return res.status(200).json({
-        code: statusCode.OK,
-        message: statusMessage.OK,
-        data: newPost,
-      });
+     
     } else if (result.type == "image") {
       var result2 = await Promise.all(
         result.data.map((element) => {
           return cloudHelper.upload(element);
         })
       );
-      var newPost = await new Post({
+      newPost = await new Post({
         described: described,
         state: state,
         status: status,
@@ -86,13 +75,9 @@ const addPost = async (req, res) => {
         comment: 0,
         author: _id,
       }).save();
-      return res.status(200).json({
-        code: statusCode.OK,
-        message: statusMessage.OK,
-        data: newPost,
-      });
+      
     } else {
-      var newPost = await new Post({
+      newPost = await new Post({
         described: described,
         state: state,
         status: status,
@@ -103,12 +88,21 @@ const addPost = async (req, res) => {
         comment: 0,
         author: _id,
       }).save();
-      return res.status(200).json({
-        code: statusCode.OK,
-        message: statusMessage.OK,
-        data: newPost,
-      });
+      
     }
+    await User.findOneAndUpdate(
+      { _id: _id },
+      {
+        $push: {
+          postIds: newPost._id,
+        },
+      }
+    );
+    return res.status(200).json({
+      code: statusCode.OK,
+      message: statusMessage.OK,
+      data: newPost,
+    });
   } catch (error) {
     console.log("error")
     if (error == statusCode.FILE_SIZE_IS_TOO_BIG) {
