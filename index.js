@@ -51,6 +51,9 @@ var cpUpload = upload.fields([
   { name: "images[]", maxCount: 4 },
   { name: "video", maxCount: 1 },
   { name: "avatar", maxCount: 1 },
+  { name: "avatar[]", maxCount: 1 },
+  { name: "cover_image", maxCount: 1},
+  { name: "cover_image[]", maxCount: 1 },
 ]);
 app.use(cpUpload);
 app.all("/", (req, res) => {

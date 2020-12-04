@@ -21,7 +21,7 @@ const setUserInfo = async (req, res) => {
   const {
     token,
     username,
-    decription,
+    description,
     address,
     city,
     country,
@@ -34,15 +34,15 @@ const setUserInfo = async (req, res) => {
       // username === phonenumber ||
       username.length < 6 ||
       username.length > 50||
-      (decription&&decription.length>150)
+      (description&&description.length>150)
     ) {
-      throw Error("params")
+      throw Error("params");
     }
     var result = await formidableHelper.parseInfo(req);
     var userData = await User.findById(_id);
     userData.avatar = result.avatar?result.avatar.url:userData.avatar;
     userData.cover_image = result.cover_image?result.cover_image.url:userData.cover_image;
-    userData.decription = decription?decription:userData.decription;
+    userData.description = description?description:userData.description;
     userData.username = username?username:userData.username;
     userData.address = address?address:userData.address;
     userData.city = city?city:userData.city;
@@ -53,11 +53,12 @@ const setUserInfo = async (req, res) => {
       code: statusCode.OK,
       message: statusMessage.OK,
       data: {
-        avatar: result.avatar?result.avatar.url:null,
-        cover_image: result.cover_image?result.cover_image.url:null,
+        avatar: result.avatar?result.avatar.url:userData.avatar,
+        cover_image: result.cover_image?result.cover_image.url:userData.cover_image,
         country: country,
+        city: city,
         link: "server không cho phép thay",
-        decription: decription
+        description: description
       }
     })
   } catch (error) {
@@ -86,18 +87,16 @@ const getUserInfo = async (req, res) => {
       console.log("trùng với id của user");
       var userData = await User.findById(_id);
       var listing = userData.friends.length;
+      userData.listing = listing;
       return res.status(200).json({
         code: statusCode.OK,
         message: statusMessage.OK,
-        data: {
-          ...userData,
-          listing: listing,
-        },
+        data: userData,
       });
     }
     // nếu xem thông tin của người khác
     var otherUserData = await User.findById(user_id).select(
-      "username created decription avatar cover_image link address city country friends"
+      "username created description avatar cover_image link address city country friends"
     );
     if (
       !otherUserData ||
@@ -106,16 +105,12 @@ const getUserInfo = async (req, res) => {
     ) {
       throw Error("notfound");
     }
-    var listing = otherUserData.friends.length;
-    var is_friend = otherUserData.friends.includes(_id);
+    otherUserData.is_friend = otherUserData.friends.includes(_id);
+    otherUserData.listing = otherUserData.friends.length;
     return res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
-      data: {
-        ...otherUserData,
-        listing: listing,
-        is_friend: is_friend,
-      },
+      data: otherUserData,
     });
   } catch (error) {
     if (error.message == "notfound") {
