@@ -11,39 +11,42 @@
    function joinchat() {
       socket.emit('joinchat', { room: document.getElementById('room').value });
    };
-   function sendMessage() {
+   function sendcontent() {
       var sender = document.getElementById('sender').value;
       var receiver = document.getElementById('receiver').value;
-      var message = document.getElementById('message').value;
+      var content = document.getElementById('content').value;
       var room = document.getElementById('room').value;
-      if (sender && receiver && message && room) {
-         socket.emit('sendmessage', { message, sender, receiver, room });
-         document.getElementById('message').value = "";
+      var conversation_id = document.getElementById('conversation_id').value;
+      if (1) {
+         console.log(sender, receiver, content, conversation_id, room)
+         socket.emit('send', { sender, receiver, content, conversation_id, room });
+         document.getElementById('content').value = "";
       }
    }
    socket.on('joinedchat', function (data) {
       var a = "";
       data.chats && data.chats.map(e => {
          a += '<div>' + e.sender + ' sent a\
-          message to '+ e.receiver + ': ' + e.message + '</div>'
+          content to '+ e.receiver + ': ' + e.content + '</div>'
       })
       // sender = data.sender;
       document.body.innerHTML = '<div>Sender: <input type = "text" id = "sender"></div>\
       <div>Receiver: <input type = "text" id = "receiver"></div>\
-      <div>Message: <input type = "text" id = "message"></div>\
-      <div>Room: <input type = "text" id = "room" value='+ data.room + ' disable>\
-         <button type = "button" name = "button" onclick = "sendMessage()">Send</button>\
-         <div id = "message-container"></div>\
+      <div>content: <input type = "text" id = "content"></div>\
+      <div>Conversation_id: <input type = "text" id = "conversation_id"></div>\
+      <div>Room: <input type = "text" id = "room" value='+ data.room + '>\
+         <button type = "button" name = "button" onclick = "sendcontent()">Send</button>\
+         <div id = "content-container"></div>\
          <div id="chat">'+ a + '</div>';
    });
    socket.on("reconnecting", data => {
       console.log("reconnecting");
    })
 
-   socket.on("onmessage", data => {
-      console.log("onmessage" + data)
+   socket.on("oncontent", data => {
+      console.log("oncontent" + data)
       document.getElementById('chat').innerHTML += '<div>' + data.sender + ' sent a\
-          message to '+ data.receiver + ': ' + data.message + '</div>'
+          content to '+ data.receiver + ': ' + data.content + '</div>'
    })
 </script>
 
