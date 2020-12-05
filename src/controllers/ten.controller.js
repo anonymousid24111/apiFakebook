@@ -85,7 +85,10 @@ const getUserInfo = async (req, res) => {
     // nếu tự xem thông tin của mình
     if (user_id == _id || !user_id) {
       console.log("trùng với id của user");
-      var userData = await User.findById(_id);
+      var userData = await User.findById(_id).populate({
+        path: "friends",
+        select: "username avatar"
+      });
       var listing = userData.friends.length;
       userData.listing = listing;
       return res.status(200).json({
@@ -96,8 +99,11 @@ const getUserInfo = async (req, res) => {
     }
     // nếu xem thông tin của người khác
     var otherUserData = await User.findById(user_id).select(
-      "username created description avatar cover_image link address city country friends"
-    );
+      "username created description avatar cover_image link address city country friends blockedIds"
+    ).populate({
+      path: "friends",
+      select: "username avatar"
+    });;
     if (
       !otherUserData ||
       otherUserData.is_blocked ||
@@ -107,12 +113,17 @@ const getUserInfo = async (req, res) => {
     }
     otherUserData.is_friend = otherUserData.friends.includes(_id);
     otherUserData.listing = otherUserData.friends.length;
+    var userData = await User.findById(_id);
+    var result = await sameFriendsHelper.sameFriends(userData.friends, user_id);
+    delete otherUserData.blockedIds;
     return res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
       data: otherUserData,
+      sameFriends: result.same_friends
     });
   } catch (error) {
+    console.log(error)
     if (error.message == "notfound") {
       return res.status(500).json({
         code: statusCode.USER_IS_NOT_VALIDATED,
