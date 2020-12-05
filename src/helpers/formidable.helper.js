@@ -7,7 +7,7 @@ const cloud = require("./cloud.helper");
 let parse = (req, postData) => {
   return new Promise(async (resolve, reject) => {
     var imageList = (req.files&& req.files["images[]"])?req.files["images[]"]:[];
-    var videoList = (req.files&& req.files.video)?req.files.video:{avatar: null, cover_image: null};
+    var videoList = (req.files&& req.files.video)?req.files.video:null;
     var numberOfImages = (req.files&& req.files["images[]"])?req.files["images[]"].length:0;
     var numberOfVideos = (req.files&& req.files.video&&req.files.video[0].mimetype.slice(0,5)=="video")?req.files.video.length:0;
     if(!numberOfImages&&!numberOfVideos){
@@ -51,7 +51,7 @@ let parse = (req, postData) => {
       resolve({ type: "image", data: imageList });
     }
     if (numberOfVideos>0) {
-      resolve({ type: "video", data: videoList });
+      resolve({ type: "video", data: videoList?videoList:{avatar: null, cover_image: null} });
     }
 
   });
