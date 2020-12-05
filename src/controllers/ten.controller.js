@@ -29,13 +29,13 @@ const setUserInfo = async (req, res) => {
   } = req.query;
   const {_id}= req.jwtDecoded.data;
   try {
-    if (!username ||
+    if (username &&(
       username.match(/[^a-z|A-Z|0-9|\s]/g) ||
       // username === phonenumber ||
       username.length < 6 ||
       username.length > 50||
       (description&&description.length>150)
-    ) {
+    )) {
       throw Error("params");
     }
     var result = await formidableHelper.parseInfo(req);
