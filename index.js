@@ -88,6 +88,11 @@ app.use(`/${firstParamsRoute}`, authMiddleware.isAuth, bonusRoute);
 app.get("/testsocket", (req, res) => {
   res.sendFile(__dirname + "/app.html");
 });
+app.all("/test", (req, res)=>{
+  console.log("truowc khi tra ve")
+  res.status(200).json("tra ve cho user");
+  console.log("sau khi tra ve")
+})
 useronlines = [];
 chats = [];
 rooms = [];

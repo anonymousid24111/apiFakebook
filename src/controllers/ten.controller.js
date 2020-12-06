@@ -19,7 +19,6 @@ const statusMessage = require("../constants/statusMessage.constant.js");
 
 const setUserInfo = async (req, res) => {
   const {
-    token,
     username,
     description,
     address,
@@ -29,15 +28,6 @@ const setUserInfo = async (req, res) => {
   } = req.query;
   const {_id}= req.jwtDecoded.data;
   try {
-    if (username &&(
-      username.match(/[^a-z|A-Z|0-9|\s]/g) ||
-      // username === phonenumber ||
-      username.length < 6 ||
-      username.length > 50||
-      (description&&description.length>150)
-    )) {
-      throw Error("params");
-    }
     var result = await formidableHelper.parseInfo(req);
     var userData = await User.findById(_id);
     userData.avatar = result.avatar?result.avatar.url:userData.avatar;
@@ -53,6 +43,7 @@ const setUserInfo = async (req, res) => {
       code: statusCode.OK,
       message: statusMessage.OK,
       data: {
+        username: username,
         avatar: result.avatar?result.avatar.url:userData.avatar,
         cover_image: result.cover_image?result.cover_image.url:userData.cover_image,
         country: country,
@@ -139,17 +130,17 @@ const getUserInfo = async (req, res) => {
 };
 
 const getNotification = async (req, res) => {
-  const { token, index, count } = req.query;
+  var { index, count } = req.query;
   const {_id}= req.jwtDecoded.data;
   try {
     index=index?index:0; 
     count=count?count:20;
     
     var userData = await User.findById(_id).populate({
-      path: "notifications",
+      path: "notifications.id",
       // select: "username avatar",
     });
-    return res.status(500).json({
+    return res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
       data: userData.notifications,
@@ -166,13 +157,14 @@ const setReadNotification = async (req, res) => {
   const { token, notification_id } = req.query;
   const {_id}= req.jwtDecoded.data;
   try {
-    // var userData = await User.findByIdAndUpdate(_id, {
-
-    // }).populate({
-    //   path: "notifications",
-    //   // select: "username avatar",
-    // });
-    return res.status(500).json({
+    var userData = await User.findById(_id);
+    userData.notifications.map(e=>{
+      if (e.id==notification_id) {
+        e.read="1";
+      }
+    });
+    await userData.save()
+    return res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
       data: userData.notifications,

@@ -9,7 +9,7 @@ const Post = require("../models/post.model.js");
 const User = require("../models/user.model.js");
 const ReportPost = require("../models/report.post.model.js");
 const Comment = require("../models/comment.model");
-
+const Notification = require("../models/notification.model");
 // const cloud = require("../helpers/cloud.helper.js");
 const formidableHelper = require("../helpers/formidable.helper");
 const cloudHelper = require("../helpers/cloud.helper.js");
@@ -90,7 +90,7 @@ const addPost = async (req, res) => {
       }).save();
       
     }
-    await User.findOneAndUpdate(
+    var userData= await User.findOneAndUpdate(
       { _id: _id },
       {
         $push: {
@@ -98,11 +98,39 @@ const addPost = async (req, res) => {
         },
       }
     );
-    return res.status(200).json({
+    res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
       data: newPost,
+      // user: userData
     });
+    try {
+      var newNotification = await new Notification({
+        type: "get post",
+        object_id: newPost._id,
+        title: userData.username+" đã thêm một bài viết mới",
+        avatar: userData.avatar,
+        group: "1",
+        created: Date.now(),
+        read: "0",
+      }).save();
+    } catch (error) {
+      console.log(err)
+    }
+    
+    try {
+      await Promise.all(userData.friends.map(async element =>{
+        return await User.findByIdAndUpdate(element, {
+          $push:{
+            notifications: {id: newNotification._id, read: "0"}
+          }
+        })
+      }));
+    } catch (error) {
+      console.log(error)
+    }
+    
+    
   } catch (error) {
     console.log("error")
     if (error == statusCode.FILE_SIZE_IS_TOO_BIG) {
@@ -392,7 +420,7 @@ const like = async (req, res) => {
           is_liked: isLiked
         },
       });
-      return res.status(200).json({
+      res.status(200).json({
         code: statusCode.OK,
         message: statusMessage.OK,
         data: {
@@ -400,6 +428,28 @@ const like = async (req, res) => {
           is_liked: isLiked
         },
       });
+      try {
+        var newNotification = await new Notification({
+          type: "get post",
+          object_id: id,
+          title: userData.username+" đã like bài viết cuả bạn",
+          avatar: userData.avatar,
+          group: "1",
+          created: Date.now(),
+          // read: "0",
+        }).save();
+        await User.findByIdAndUpdate(result.author,{
+          $push:{
+            notifications: {
+              id: newNotification._id,
+              read: "0"
+            }
+          }
+        })
+      } catch (error) {
+        console.log(error)
+      }
+      
     } else {
       // nếu user chưa like thì thêm user id vào danh sách post
       var isLiked = result.author==_id?true:result.is_liked
@@ -613,11 +663,34 @@ const setComment = async (req, res) => {
       },
     });
 
-    return res.status(200).json({
+    res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
       data: result2.comment_list,
     });
+
+    try {
+      var newNotification = await new Notification({
+        type: "get post",
+        object_id: id,
+        title: userData.username+" đã comment bài viết cuả bạn",
+        avatar: userData.avatar,
+        group: "1",
+        created: Date.now(),
+        // read: "0",
+      }).save();
+      await User.findByIdAndUpdate(result.author,{
+        $push:{
+          notifications: {
+            id: newNotification._id,
+            read: "0"
+          }
+        }
+      })
+    } catch (error) {
+      console.log(error)
+    }
+
   } catch (error) {
     console.log(error);
     if (error.message == "params") {

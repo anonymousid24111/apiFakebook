@@ -142,7 +142,7 @@ const getUserFriends = async (req, res) => {
         same_friends: resultSameFriend[index],
       }
     })
-    return res.status(500).json({
+    return res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
       data: {

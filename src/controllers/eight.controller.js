@@ -11,6 +11,7 @@ const Request = require("../models/request.model.js");
 
 const ReportPost = require("../models/report.post.model.js");
 const Comment = require("../models/comment.model");
+const Notification = require("../models/notification.model");
 
 const sameFriendsHelper = require("../helpers/sameFriends.helper.js");
 
@@ -57,6 +58,7 @@ const setAcceptFriend = async (req, res) => {
           },
         },
       });
+     
       return res.status(200).json({
         code: statusCode.OK,
         message: statusMessage.OK,
@@ -64,18 +66,9 @@ const setAcceptFriend = async (req, res) => {
     }
     if (is_accept == 1) {
       // kiểm tra xem đã kết bạn chưa
-      var friendData = await User.findByIdAndUpdate(user_id, {
-        $pull: {
-          sendRequestedFriends: {
-            receiver: _id,
-          },
-        },
-        $push: {
-          friends: _id,
-        },
-      });
+      
       // tìm user và xoá requested friend có author == user_id
-      await User.findByIdAndUpdate(_id, {
+      var userData = await User.findByIdAndUpdate(_id, {
         $pull: {
           requestedFriends: {
             author: user_id,
@@ -85,12 +78,33 @@ const setAcceptFriend = async (req, res) => {
           friends: user_id,
         },
       });
-      return res.status(200).json({
+      res.status(200).json({
         code: statusCode.OK,
         message: statusMessage.OK,
       });
+     
+      var newNotification =await new Notification({
+        type: "trang user",
+        object_id: user_id,
+        title: userData.username+" đã chấp nhận lời mời kết bạn",
+        created: Date.now(),
+        avatar: userData.avatar,
+        group: "1"
+      }).save();
+      var friendData = await User.findByIdAndUpdate(user_id, {
+        $pull: {
+          sendRequestedFriends: {
+            receiver: _id,
+          },
+        },
+        $push: {
+          friends: _id,
+          notifications: {id:newNotification._id, read: "0"}
+        },
+      });
     }
   } catch (error) {
+    console.log(error)
     if (error.message == "params") {
       return res.status(200).json({
         code: statusCode.PARAMETER_VALUE_IS_INVALID,
