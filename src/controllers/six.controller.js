@@ -17,7 +17,7 @@ const statusMessage = require("../constants/statusMessage.constant.js");
 
 const search = async (req, res) => {
     const { token, user_id, keyword, index, count } = req.query;
-    const { _id } = req.jwtDecoded.data;
+    const { _id } = req.userDataPass;
     // check params
     try {
         if (!index || !count || !user_id|| !keyword) {
@@ -67,13 +67,13 @@ const search = async (req, res) => {
 
 const getSavedSearch = async (req, res) => {
     const { token, index, count } = req.query;
-    const { _id } = req.jwtDecoded.data;
+    const { _id } = req.userDataPass;
     // check params
     try {
         if (!index || !count ) {
             throw Error("params");
         }
-        var userData = await User.findById(_id);
+        var userData = req.userDataPass;
         if (!userData) {
             throw Error("nodata");
         }
@@ -104,7 +104,7 @@ const getSavedSearch = async (req, res) => {
 
 const delSavedSearch = async (req, res) => {
     const { token, search_id, all } = req.query;
-    const { _id } = req.jwtDecoded.data;
+    const { _id } = req.userDataPass;
     // check params
     try {
         if(all==1){

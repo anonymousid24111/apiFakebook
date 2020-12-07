@@ -62,7 +62,9 @@
 * delete_message ? chưa test
 * delete_conversation ? chưa test
 # Api bonus
-* set_conversation done     tạo coversation giữa 2 người input: partner_id
+* set_conversation done params: user_id   tạo coversation giữa 2 người input: partner_id
+* unfriend params: user_id
+* not_suggest params: user_id cho vào danh sách không gợi ý
 
 # Api socket
 ## Emit- gửi lên server

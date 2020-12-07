@@ -11,7 +11,7 @@ const md5 = require("md5");
 
 const setBlock = async (req, res) => {
   const { token, user_id, type } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { _id } = req.userDataPass;
 
   try {
     //kiểm tra tham số đầu vào
@@ -26,7 +26,7 @@ const setBlock = async (req, res) => {
       throw Error("action");
     }
     // OK
-    var userData = await User.findById(_id);
+    var userData = req.userDataPass;
     var isBlocked = userData.blockedIds.includes(user_id);
     if (type == 0 && isBlocked) {
       //block và đã block r
@@ -107,10 +107,10 @@ const setBlock = async (req, res) => {
 };
 
 const change_password = async (req, res) => {
-  let { token, password, new_password } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  let { password, new_password } = req.query;
+  const { _id } = req.userDataPass;
   try {
-    const user = await User.findById(_id);
+    const user = req.userDataPass;
     if (
       !new_password ||
       new_password.length < 6 ||
@@ -163,10 +163,10 @@ const change_password = async (req, res) => {
 };
 
 const getPushSettings = async (req, res) => {
-  const { token } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  // const { token } = req.query;
+  const { _id } = req.userDataPass;
   try {
-    var userData = await User.findById(_id);
+    var userData = req.userDataPass;
     return res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
@@ -202,7 +202,7 @@ const setPushSettings = async (req, res) => {
     vibrant_on,
     led_on,
   } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { _id } = req.userDataPass;
   try {
     if (
       like_comment == undefined &&
@@ -219,7 +219,7 @@ const setPushSettings = async (req, res) => {
     ) {
       throw Error("params");
     }
-    var userData = await User.findById(_id);
+    var userData = req.userDataPass;
     userData.settings.like_comment =
       like_comment == "0" || like_comment == "1"
         ? like_comment
@@ -282,7 +282,7 @@ const setPushSettings = async (req, res) => {
 
 const checkNewVersion = async (req, res)=>{
   const {token, last_update}= req.query;
-  const {_id}= req.jwtDecoded.data;
+  const {_id}= req.userDataPass;
   try {
     if (!last_update) {
       throw Error("params")

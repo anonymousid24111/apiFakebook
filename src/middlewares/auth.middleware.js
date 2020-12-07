@@ -33,6 +33,7 @@ let isAuth = async (req, res, next) => {
       }
       // console.log(decoded)
       req.jwtDecoded = decoded;
+      req.userDataPass = result;
 
       next();
     } catch (error) {

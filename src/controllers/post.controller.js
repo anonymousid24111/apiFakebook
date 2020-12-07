@@ -36,7 +36,7 @@ const deletePostAll = async (req, res)=>{
 const addPost = async (req, res) => {
   console.log(req.files)
   const { token, described, state, can_edit, status } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { _id } = req.userDataPass;
   // validate input
   try {
     var newPost;
@@ -150,7 +150,7 @@ const addPost = async (req, res) => {
 
 const getPost = async (req, res) => {
   const { token, id } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { _id } = req.userDataPass;
   try {
     if (!id) {
       throw Error("PARAMETER_VALUE_IS_INVALID");
@@ -321,7 +321,7 @@ const editPost = async (req, res) => {
 
 const deletePost = async (req, res) => {
   const { id } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { _id } = req.userDataPass;
   try {
     var result = await Post.findOneAndDelete({
       _id: id,
@@ -394,7 +394,7 @@ const reportPost = async (req, res) => {
 
 const like = async (req, res) => {
   const { id } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { _id } = req.userDataPass;
 
   try {
     // tim post theo id
@@ -497,7 +497,7 @@ const like = async (req, res) => {
 
 const getComment = async (req, res) => {
   var { id, count, index } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { _id } = req.userDataPass;
   try {
     // kiểm tra input có null không
     if (!id) {
@@ -607,7 +607,7 @@ const getComment = async (req, res) => {
 
 const setComment = async (req, res) => {
   var { id, comment, index, count } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { _id } = req.userDataPass;
 
   // check params
   try {

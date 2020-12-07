@@ -16,11 +16,11 @@ const statusCode = require("../constants/statusCode.constant.js");
 const statusMessage = require("../constants/statusMessage.constant.js");
 
 const setConversation = async (req, res) => {
-  const { token, partner_id } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { partner_id } = req.query;
+  const { _id } = req.userDataPass;
   try {
     var partnerData = await User.findById(partner_id);
-    var userData = await User.findById(_id);
+    var userData = req.userDataPass;
     if (
       !partnerData ||
       partnerData.is_blocked ||
@@ -57,6 +57,65 @@ const setConversation = async (req, res) => {
   }
 };
 
+const unfriend = async (req, res)=>{
+  const {user_id}= req.query;
+  const {_id}= req.userDataPass;
+  var {userDataPass} = req;
+  try {
+    await User.findByIdAndUpdate(_id,{
+      $pull:{
+        friends: user_id
+      }
+    });
+    await User.findByIdAndUpdate(user_id,{
+      $pull:{
+        friends: _id
+      }
+    })
+    res.status(200).json({
+      code: statusCode.OK,
+      message: statusMessage.OK,
+      server: "huỷ kết bạn thành công"
+    })
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      code: statusCode.UNKNOWN_ERROR,
+      message: statusMessage.UNKNOWN_ERROR,
+    });
+  }
+
+
+}
+
+const notSuggest = async (req, res)=>{
+  const {user_id}= req.query;
+  const {_id}= req.userDataPass;
+  var {userDataPass} = req;
+  try {
+    await User.findByIdAndUpdate(_id,{
+      $push:{
+        not_suggest: user_id
+      }
+    });
+    res.status(200).json({
+      code: statusCode.OK,
+      message: statusMessage.OK,
+      server: "đã thêm vào danh sách không gợi ý"
+    })
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      code: statusCode.UNKNOWN_ERROR,
+      message: statusMessage.UNKNOWN_ERROR,
+    });
+  }
+
+
+}
+
 module.exports = {
   setConversation,
+  unfriend,
+  notSuggest
 };

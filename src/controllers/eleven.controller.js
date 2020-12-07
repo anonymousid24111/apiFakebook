@@ -16,8 +16,8 @@ const statusCode = require("../constants/statusCode.constant.js");
 const statusMessage = require("../constants/statusMessage.constant.js");
 
 const getConversation = async (req, res) => {
-  const { token, partner_id, conversation_id, index, count } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { partner_id, conversation_id, index, count } = req.query;
+  const { _id } = req.userDataPass;
   try {
     var chatData = await Chat.findById(conversation_id).populate({
       path: "sender",
@@ -44,7 +44,7 @@ const getConversation = async (req, res) => {
 
 const getListConversation = async (req, res) => {
   const { token, index, count } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { _id } = req.userDataPass;
   try {
     var userData = await User.findById(_id).populate({
       path: "conversation",
@@ -79,10 +79,10 @@ const getListConversation = async (req, res) => {
 };
 
 const setReadMessage = async (req, res) => {
-  const { token, partner_id, conversation_id} = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { partner_id, conversation_id} = req.query;
+  const { _id } = req.userDataPass;
   try {
-    var userData = await User.findById(_id);
+    var userData = req.userDataPass;
     if(!userData||userData.blockedIds.inclules(partner_id)){
       throw Error("nodata")
     }
@@ -125,7 +125,7 @@ const setReadMessage = async (req, res) => {
 
 const deleteConversation = async (req, res) => {
   const { token, partner_id, conversation_id, message_id } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { _id } = req.userDataPass;
   try {
     var chatData = await Chat.findByIdAndUpdate(conversation_id, {
       $pull:{
@@ -157,7 +157,7 @@ const deleteConversation = async (req, res) => {
 
 const deleteMessage = async (req, res) => {
   const { token, partner_id, conversation_id, message_id } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { _id } = req.userDataPass;
   try {
     var chatData = await Chat.findByIdAndUpdate(conversation_id, {
       $pull:{

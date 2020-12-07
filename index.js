@@ -4,8 +4,6 @@ const app = require("express")();
 const server = require("http").Server(app);
 const io = require("socket.io")(server);
 const bodyParser = require("body-parser");
-const formidable = require("formidable");
-const fs = require("fs");
 var cors = require("cors");
 var multer = require("multer");
 var upload = multer({ dest: "uploads/" });
@@ -93,7 +91,6 @@ app.all("/test", (req, res)=>{
   res.status(200).json("tra ve cho user");
   console.log("sau khi tra ve")
 })
-useronlines = [];
 chats = [];
 rooms = [];
 io.on("connection", (socket) => {

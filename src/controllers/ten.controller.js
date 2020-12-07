@@ -26,10 +26,10 @@ const setUserInfo = async (req, res) => {
     country,
     link,
   } = req.query;
-  const {_id}= req.jwtDecoded.data;
+  const {_id}= req.userDataPass;
   try {
     var result = await formidableHelper.parseInfo(req);
-    var userData = await User.findById(_id);
+    var userData = req.userDataPass;
     userData.avatar = result.avatar?result.avatar.url:userData.avatar;
     userData.cover_image = result.cover_image?result.cover_image.url:userData.cover_image;
     userData.description = description?description:userData.description;
@@ -71,7 +71,7 @@ const setUserInfo = async (req, res) => {
 
 const getUserInfo = async (req, res) => {
   const { token, user_id } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { _id } = req.userDataPass;
   try {
     // nếu tự xem thông tin của mình
     if (user_id == _id || !user_id) {
@@ -104,7 +104,7 @@ const getUserInfo = async (req, res) => {
     }
     otherUserData.is_friend = otherUserData.friends.includes(_id);
     otherUserData.listing = otherUserData.friends.length;
-    var userData = await User.findById(_id);
+    var userData = req.userDataPass;
     var result = await sameFriendsHelper.sameFriends(userData.friends, user_id);
     delete otherUserData.blockedIds;
     return res.status(200).json({
@@ -131,7 +131,7 @@ const getUserInfo = async (req, res) => {
 
 const getNotification = async (req, res) => {
   var { index, count } = req.query;
-  const {_id}= req.jwtDecoded.data;
+  const {_id}= req.userDataPass;
   try {
     index=index?index:0; 
     count=count?count:20;
@@ -154,10 +154,10 @@ const getNotification = async (req, res) => {
 };
 
 const setReadNotification = async (req, res) => {
-  const { token, notification_id } = req.query;
-  const {_id}= req.jwtDecoded.data;
+  const { notification_id } = req.query;
+  const {_id}= req.userDataPass;
   try {
-    var userData = await User.findById(_id);
+    var userData = req.userDataPass;
     userData.notifications.map(e=>{
       if (e.id==notification_id) {
         e.read="1";

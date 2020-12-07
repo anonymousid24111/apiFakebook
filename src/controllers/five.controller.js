@@ -27,7 +27,7 @@ const getListPosts = async (req, res) => {
     index,
     count,
   } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { _id } = req.userDataPass;
   // check params
   try {
     if (!index || !count) {
@@ -103,7 +103,7 @@ const getListPosts = async (req, res) => {
 
 const checkNewItem = async (req, res) => {
   const { last_id, category_id } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { _id } = req.userDataPass;
   try {
     var result = await User.findById(_id).populate({
       path: "friends",

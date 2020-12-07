@@ -80,6 +80,10 @@ const userSchema = new mongoose.Schema({
       ref: "notification",
     },
     read: String
+  },],
+  not_suggest:[ {
+    type: Schema.Types.ObjectId,
+    ref: "user",
   },]
 });
 
