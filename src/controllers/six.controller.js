@@ -16,7 +16,7 @@ const statusCode = require("../constants/statusCode.constant.js");
 const statusMessage = require("../constants/statusMessage.constant.js");
 
 const search = async (req, res) => {
-    var {  user_id, keyword, index, count } = req.query;
+    var { keyword, index, count } = req.query;
     const { _id } = req.userDataPass;
     // check params
     try {
@@ -24,17 +24,11 @@ const search = async (req, res) => {
             index=0;
             count=20;
         }
-        if (!user_id|| !keyword) {
+        if (!keyword) {
             throw Error("params");
         }
-        await User.findByIdAndUpdate(_id,{
-            $push:{
-                savedSearch: {
-                    keyword: keyword,
-                    created: Date.now(),
-                }
-            }
-        })
+        // var savedSearchList = req.userDataPass.
+        
         // mo ta
         // 
         // Ưu tiên đứng đầu danh sách là các kết quả có chứa đủ các từ và đúng thứ tự
@@ -47,10 +41,25 @@ const search = async (req, res) => {
             path: "author",
             select:"username avatar"
         });
-        return res.status(200).json({
+        res.status(200).json({
             code: statusCode.OK,
             message: statusMessage.OK,
             data: postData1
+        })
+        await User.findByIdAndUpdate(_id,{
+            $pull:{
+                savedSearch: {
+                    keyword: keyword,
+                }
+            }
+        })
+        await User.findByIdAndUpdate(_id,{
+            $push:{
+                savedSearch: {
+                    keyword: keyword,
+                    created: Date.now(),
+                }
+            }
         })
     } catch (error) {
         if (error.message == "params") {
