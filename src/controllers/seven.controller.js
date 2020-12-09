@@ -133,7 +133,7 @@ const getUserFriends = async (req, res) => {
           );
         })
       );
-      userData = await User.findById(_id).populate({
+      userData = await User.findById(user_id).populate({
         path: "friends",
         select: "avatar username"
       });
