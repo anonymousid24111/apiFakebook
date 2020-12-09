@@ -16,14 +16,14 @@ const statusCode = require("../constants/statusCode.constant.js");
 const statusMessage = require("../constants/statusMessage.constant.js");
 
 const getConversation = async (req, res) => {
-  const { token, partner_id, conversation_id, index, count } = req.query;
+  var { partner_id, conversation_id, index, count } = req.query;
   const { _id } = req.jwtDecoded.data;
   try {
     var chatData = await Chat.findById(conversation_id).populate({
       path: "sender",
       select: "username avatar",
       sort: {
-        created: -1,
+        created: 1,
       },
     });
     return res.status(200).json({
@@ -43,9 +43,10 @@ const getConversation = async (req, res) => {
 };
 
 const getListConversation = async (req, res) => {
-  const { token, index, count } = req.query;
+  var { index, count } = req.query;
   const { _id } = req.jwtDecoded.data;
   try {
+
     var userData = await User.findById(_id).populate({
       path: "conversation",
       select: "partner_id created is_blocked conversation",
