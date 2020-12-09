@@ -2,6 +2,7 @@ const dotenv = require("dotenv");
 dotenv.config();
 var ObjectId = require("mongoose").Types.ObjectId;
 const User = require("../models/user.model.js");
+const Chat = require("../models/chat.model.js");
 const Notification = require("../models/notification.model");
 
 const sameFriendsHelper = require("../helpers/sameFriends.helper.js");
@@ -82,6 +83,11 @@ const setAcceptFriend = async (req, res) => {
         avatar: userData.avatar,
         group: "1"
       }).save();
+      var chatData = await new Chat({
+        partner_id: [user_id, _id],
+        is_blocked: null,
+        created: Date.now(),
+      }).save();
       var friendData = await User.findByIdAndUpdate(user_id, {
         $pull: {
           sendRequestedFriends: {
@@ -89,11 +95,29 @@ const setAcceptFriend = async (req, res) => {
           },
         },
         $push: {
+          conversations: chatData._id,
           friends: _id,
           notifications: {id:newNotification._id, read: "0"}
         },
       });
+
+      
+      // partnerData.conversations.push(chatData._id);
+      // await partnerData.save();
+      if (_id != user_id) {
+        await User.findByIdAndUpdate(_id, {
+          $push: {
+            conversations: chatData._id,
+          },
+        });
+      }
+
+
     }
+
+
+
+
   } catch (error) {
     console.log(error)
     if (error.message == "params") {

@@ -33,7 +33,7 @@ const setConversation = async (req, res) => {
     var chatData = await new Chat({
       partner_id: [partner_id, _id],
       is_blocked: null,
-      creacted: Date.now(),
+      created: Date.now(),
     }).save();
     partnerData.conversations.push(chatData._id);
     await partnerData.save();
@@ -114,8 +114,73 @@ const notSuggest = async (req, res)=>{
 
 }
 
+const searchUser = async (req, res) => {
+  var { keyword, index, count } = req.query;
+  const { _id } = req.userDataPass;
+  // check params
+  try {
+      if(!index||!count||index<0||count<0){
+          index=0;
+          count=20;
+      }
+      if (!keyword) {
+          throw Error("params");
+      }
+      // var savedSearchList = req.userDataPass.
+      
+      // mo ta
+      // 
+      // Ưu tiên đứng đầu danh sách là các kết quả có chứa đủ các từ và đúng thứ tự
+      // var postData1 =await Post.find({ described: new RegExp(keyword, "i") });
+      // Tiếp theo là các kết quả đủ từ nhưng không đúng thứ tự
+      var userData1 =await User.find({$or: [
+          { username: new RegExp(keyword, "i") },
+          { username: new RegExp(keyword.replace(" ", "|"), "i") }
+      ]}).select("username avatar");
+      res.status(200).json({
+          code: statusCode.OK,
+          message: statusMessage.OK,
+          data: userData1
+      })
+      // await User.findByIdAndUpdate(_id,{
+      //     $pull:{
+      //         savedSearch: {
+      //             keyword: keyword,
+      //         }
+      //     }
+      // })
+      // await User.findByIdAndUpdate(_id,{
+      //     $push:{
+      //         savedSearch: {
+      //             keyword: keyword,
+      //             created: Date.now(),
+      //         }
+      //     }
+      // })
+  } catch (error) {
+      if (error.message == "params") {
+          return res.status(500).json({
+              code: statusCode.PARAMETER_VALUE_IS_INVALID,
+              message: statusMessage.PARAMETER_VALUE_IS_INVALID
+          })
+      } else if (error.message == "nodata") {
+          return res.status(500).json({
+              code: statusCode.NO_DATA_OR_END_OF_LIST_DATA,
+              message: statusMessage.NO_DATA_OR_END_OF_LIST_DATA
+          })
+      } else {
+          return res.status(500).json({
+              code: statusCode.UNKNOWN_ERROR,
+              message: statusMessage.UNKNOWN_ERROR
+          })
+      }
+  }
+}
+
+
 module.exports = {
   setConversation,
   unfriend,
-  notSuggest
+  notSuggest,
+  searchUser
 };

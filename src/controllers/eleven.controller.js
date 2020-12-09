@@ -67,7 +67,7 @@ const getListConversation = async (req, res) => {
     userData.conversations.forEach((element) => {
       
       element.conversation = element.conversation[element.conversation.length-1];
-      if(element.conversation[0].unread=="1") numNewMessage+=1;
+      if(element.conversation&&element.conversation[0].unread=="1") numNewMessage+=1;
       // return element;
     });
     return res.status(200).json({
