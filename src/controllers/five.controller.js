@@ -35,6 +35,28 @@ const getListPosts = async (req, res) => {
       index = 0;
       count = 20;
     }
+    if(user_id){
+      var resultData = await User.findById(user_id).populate({
+        
+        path: "postIds",
+        populate: {
+          path: "author",
+          select: "username avatar"
+        },
+        options: {
+          sort: {
+            created: -1,
+          },
+        },
+      });
+      return res.status(200).json({
+        code: statusCode.OK,
+        message: statusMessage.OK,
+        data: resultData.postIds
+      })
+    }
+
+
     var result = await User.findById(_id).populate({
       path: "friends",
       select: "postIds",
