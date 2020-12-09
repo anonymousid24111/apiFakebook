@@ -1,14 +1,7 @@
 const dotenv = require("dotenv");
-dotenv.config();
-const fs = require("fs");
-const formidable = require("formidable");
-const { getVideoDurationInSeconds } = require("get-video-duration");
-const mongoose = require("mongoose");
 
 const Post = require("../models/post.model.js");
 const User = require("../models/user.model.js");
-const ReportPost = require("../models/report.post.model.js");
-const Comment = require("../models/comment.model");
 
 const sameFriendsHelper = require("../helpers/sameFriends.helper.js");
 
@@ -16,9 +9,13 @@ const statusCode = require("../constants/statusCode.constant.js");
 const statusMessage = require("../constants/statusMessage.constant.js");
 
 const getRequestedFriends = async (req, res) => {
-  const { token, index, count } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { index, count } = req.query;
+  const { _id } = req.userDataPass;
   try {
+    if(!index||!count||index<0||count<0){
+      index=0;
+      count=20;
+    }
     var userData = await User.findById(_id).populate({
       path: "requestedFriends.author",
       // select: "author._id author.username author.avatar",
@@ -83,7 +80,7 @@ const getListVideos = async (req, res) => {
     index,
     count,
   } = req.query;
-  const {_id}= req.jwtDecoded.data;
+  const {_id}= req.userDataPass;
   try {
     var postData = await Post.find({
       video: {
@@ -93,7 +90,7 @@ const getListVideos = async (req, res) => {
       path: "author",
       select: "username avatar"
     });
-    var userData = await User.findById(_id);
+    var userData = req.userDataPass;
     // user block athor
     var b = await Promise.all(postData.map(async (element, index)=>{
       var result = await User.findById(element.author._id);
@@ -119,10 +116,14 @@ const getListVideos = async (req, res) => {
 };
 
 const getUserFriends = async (req, res) => {
-  const { token } = req.query;
-  const {_id}= req.jwtDecoded.data;
+  var { index, count } = req.query;
+  const {_id}= req.userDataPass;
   try {
-    var userData = await User.findById(_id);
+    if(!index||!count||index<0||count<0){
+      index=0;
+      count=20;
+    }
+    var userData = req.userDataPass;
     var resultSameFriend =await Promise.all(
       userData.friends.map((element) => {
         return sameFriendsHelper.sameFriends(
@@ -142,7 +143,7 @@ const getUserFriends = async (req, res) => {
         same_friends: resultSameFriend[index],
       }
     })
-    return res.status(500).json({
+    return res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
       data: {

@@ -22,8 +22,8 @@
 * set_comment ? chưa xử lí bỏ qua các comment mà author comment và sender block nhau
 ***
 # Tuần 5
-* get_list_posts ? làm get_requested_friends and set_accept_friend trước
-* check_new_item ? chưa hiểu 
+* get_list_posts 
+* check_new_item
 ***
 # Tuần 6:
 * search done ? chưa xử lý tìm kiếm không dấu a=á=ă=â=ả=ã=à;
@@ -62,4 +62,27 @@
 * delete_message ? chưa test
 * delete_conversation ? chưa test
 # Api bonus
-* set_conversation done *** chưa test tạo coversation giữa 2 người input: partner_id
+* set_conversation done params: user_id   tạo coversation giữa 2 người input: partner_id
+* unfriend params: user_id
+* not_suggest params: user_id cho vào danh sách không gợi ý
+
+# Api socket
+## Emit- gửi lên server
+* joinchat data: {_id: "_id cua nguoi dung"}
+* send: gửi tin nhắn  
+    sender: "_id của người gửi"  
+    receiver: "id của người nhận  
+    message: "tin nhắn muốn gửi"  
+    conversation_id: "_id của phòng chat"
+* deletemessage: xoá tin nhắn  
+    sender: "_id của người gửi"  
+    receiver: "id của người nhận"  
+    message_id: "_id của tin nhắn muốn xoá"  
+    conversation_id: "_id của phòng chat"
+## On- nhận từ server
+* joinedchat data: {_id: "_id của phòng đã tham gia- id của người emit"}
+* onmessage: nhận tin nhắn từ server  
+    sender: "_id của người gửi"  
+    receiver: "id của người nhận"  
+    message: "nội dung nhận được"  
+    conversation_id: "_id của phòng chat"

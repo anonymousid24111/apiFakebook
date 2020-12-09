@@ -1,14 +1,12 @@
 require("dotenv").config();
 const express = require("express");
 const app = require("express")();
-const server = require("http").Server(app);
+const server = require("http").createServer(app);
 const io = require("socket.io")(server);
 const bodyParser = require("body-parser");
-const formidable = require("formidable");
-const fs = require("fs");
-var cors = require('cors');
-var multer  = require('multer')
-var upload = multer({ dest: 'uploads/' })
+var cors = require("cors");
+var multer = require("multer");
+var upload = multer({ dest: "uploads/" });
 // const ThumbnailGenerator = require('video-thumbnail-generator').default;
 const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
 const ffmpeg = require("fluent-ffmpeg");
@@ -44,10 +42,17 @@ const firstParamsRoute = process.env.FIRST_PARAMS_ROUTE || "it4788";
 
 // const app = express();
 app.use(cors());
-app.use(bodyParser.json({limit: '50mb'})); // for parsing application/json
-app.use(bodyParser.urlencoded({limit: '50mb', extended: true })); // for parsing application/x-www-form-urlencoded
+app.use(bodyParser.json({ limit: "50mb" })); // for parsing application/json
+app.use(bodyParser.urlencoded({ limit: "50mb", extended: true })); // for parsing application/x-www-form-urlencoded
 app.use(express.json());
-var cpUpload = upload.fields([{ name: 'images', maxCount: 4 }, { name: 'video', maxCount: 1 }, {name: 'avatar', maxCount: 1}]);
+var cpUpload = upload.fields([
+  { name: "images[]", maxCount: 4 },
+  { name: "video", maxCount: 1 },
+  { name: "avatar", maxCount: 1 },
+  { name: "avatar[]", maxCount: 1 },
+  { name: "cover_image", maxCount: 1},
+  { name: "cover_image[]", maxCount: 1 },
+]);
 app.use(cpUpload);
 app.all("/", (req, res) => {
   res.status(200).json({
@@ -57,12 +62,12 @@ app.all("/", (req, res) => {
 });
 
 app.post("/fileupload", (req, res) => {
-    console.log(req.files);
-    // fs.rename(oldpath, newpath, function (err) {
-    //   if (err) throw err;
-    res.write("File uploaded and moved!");
-    return res.end();
-    // });
+  console.log(req.files);
+  // fs.rename(oldpath, newpath, function (err) {
+  //   if (err) throw err;
+  res.write("File uploaded and moved!");
+  return res.end();
+  // });
   // });
 });
 
@@ -79,63 +84,81 @@ app.use(`/${firstParamsRoute}`, authMiddleware.isAuth, bonusRoute);
 
 // test socket
 app.get("/testsocket", (req, res) => {
-  res.sendFile(__dirname + "/index.html");
+  res.sendFile(__dirname + "/app.html");
 });
-useronlines = [];
+app.all("/test", (req, res)=>{
+  console.log("truowc khi tra ve")
+  res.status(200).json("tra ve cho user");
+  console.log("sau khi tra ve")
+})
 chats = [];
-io.on("connection", function (socket) {
+rooms = [];
+io.on("connection", (socket) => {
+  socket.on("send_message", (data) => {
+    socket.broadcast.emit("receive_message", data)
+})
   console.log("A user connected:" + socket.id);
   socket.on("joinchat", function (data) {
     socket.join(data._id);
-    useronlines.push(data._id);
-    // console.log(socket.useronlines, useronlines);
+    rooms.push(data._id);
+    // console.log(socket.rooms, rooms);
     socket.emit("joinedchat", {
-      room: data._id,
-      // chats: chats.filter((e) => e.room == data.room),
+      _id: data._id,
+      chats: chats.filter((e) => e.room == data._id),
     });
   });
   socket.on("reconnecting", (data) => {
     console.log("client dang tao lai ket noi");
   });
-  socket.on("send", async ({sender, receiver, message_id, created, content, conversation_id})=> {
-    await Chat.findByIdAndUpdate(conversation_id, {
-      $push: {
-        conversation: {
-          message: content,
-          unread: "1",
-          created: Date.now(),
-          sender: sender
-        }
-      }
-    })
-    io.to(receiver).emit("onmessage", {
-      sender: sender,
-      receiver: receiver,
-      content: content,
-      created: Date.now()
-    });
+  socket.on("send", async (data) => {
+    chats.push(data);
+    try {
+      await Chat.findByIdAndUpdate(data.conversation_id, {
+        $push: {
+          conversation: {
+            message: data.message,
+            unread: "1",
+            created: Date.now(),
+            sender: data.sender,
+          },
+        },
+      });
+    } catch (error) {
+      console.log("loi updata Chat");
+    } finally{
+      io.to(data.receiver).emit("onmessage", {
+        sender: data.sender,
+        conversation_id: data.conversation_id,
+        receiver: data.receiver,
+        message: data.message,
+      });
+    }
+
   });
-  socket.on("deletemessage",async ({sender, receiver, message_id, created, content, conversation_id})=>{
-    await Chat.findByIdAndUpdate(_id, {
-      $push:{
-        conversation: {
-          _id: message_id
-        }
-      }
-    });
-    io.to(receiver).emit("ondeletemessage", {
-      sender: sender,
-      receiver: receiver,
-      message_id: message_id,
-    });
-  })
-  socket.on("disconnect", data=>{
+  socket.on("deletemessage",async (data) => {
+    console.log("client xoa tin nhan");
+    try {
+      await Chat.findByIdAndUpdate(data.conversation_id, {
+        $pull: {
+          conversation: {
+            _id: data.message_id
+          },
+        },
+      });
+    } catch (error) {
+      console.log("loi updata Chat");
+    } finally{
+      io.to(data.receiver).emit("onmessage", {
+        sender: data.sender,
+        conversation_id: data.conversation_id,
+        receiver: data.receiver,
+        message: "Tin nhắn đã bị xoá",
+      });
+    }
+  });
+  socket.on("disconnect", (data) => {
     console.log("client ngat ket noi");
-    // useronlines.find(x)
-  })
+  });
 });
 
 server.listen(port);
-// app.listen(port, function () {
-//   console.log("Server listening on port " + port);
-// });

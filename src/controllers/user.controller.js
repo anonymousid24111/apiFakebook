@@ -10,7 +10,7 @@ const statusMessage = require("./../constants/statusMessage.constant.js");
 
 const logout = async (req, res) => {
   const { token } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { _id } = req.userDataPass;
   try {
     var userData = await User.findByIdAndUpdate(_id, {
       $set: {
@@ -31,7 +31,7 @@ const logout = async (req, res) => {
 }
 
 const changeInfoAfterSignup = async (req, res) => {
-  const { _id, phonenumber } = req.jwtDecoded.data;
+  const { _id, phonenumber } = req.userDataPass;
   const { token, username } = req.query;
   // username để trống, chứa các kí tự đặc biệt, trùng với số điện thoại, 
   // nhỏ hơn 6 tí tự hoặc lớn hơn 50 kí tự

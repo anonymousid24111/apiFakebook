@@ -16,21 +16,19 @@ const statusCode = require("../constants/statusCode.constant.js");
 const statusMessage = require("../constants/statusMessage.constant.js");
 
 const search = async (req, res) => {
-    const { token, user_id, keyword, index, count } = req.query;
-    const { _id } = req.jwtDecoded.data;
+    var { keyword, index, count } = req.query;
+    const { _id } = req.userDataPass;
     // check params
     try {
-        if (!index || !count || !user_id|| !keyword) {
+        if(!index||!count||index<0||count<0){
+            index=0;
+            count=20;
+        }
+        if (!keyword) {
             throw Error("params");
         }
-        await User.findByIdAndUpdate(_id,{
-            $push:{
-                savedSearch: {
-                    keyword: keyword,
-                    created: Date.now(),
-                }
-            }
-        })
+        // var savedSearchList = req.userDataPass.
+        
         // mo ta
         // 
         // Ưu tiên đứng đầu danh sách là các kết quả có chứa đủ các từ và đúng thứ tự
@@ -39,25 +37,43 @@ const search = async (req, res) => {
         var postData1 =await Post.find({$or: [
             { described: new RegExp(keyword, "i") },
             { described: new RegExp(keyword.replace(" ", "|"), "i") }
-        ]});
-        return res.status(200).json({
+        ]}).populate({
+            path: "author",
+            select:"username avatar"
+        });
+        res.status(200).json({
             code: statusCode.OK,
             message: statusMessage.OK,
             data: postData1
         })
+        await User.findByIdAndUpdate(_id,{
+            $pull:{
+                savedSearch: {
+                    keyword: keyword,
+                }
+            }
+        })
+        await User.findByIdAndUpdate(_id,{
+            $push:{
+                savedSearch: {
+                    keyword: keyword,
+                    created: Date.now(),
+                }
+            }
+        })
     } catch (error) {
         if (error.message == "params") {
-            return res.status(200).json({
+            return res.status(500).json({
                 code: statusCode.PARAMETER_VALUE_IS_INVALID,
                 message: statusMessage.PARAMETER_VALUE_IS_INVALID
             })
         } else if (error.message == "nodata") {
-            return res.status(200).json({
+            return res.status(500).json({
                 code: statusCode.NO_DATA_OR_END_OF_LIST_DATA,
                 message: statusMessage.NO_DATA_OR_END_OF_LIST_DATA
             })
         } else {
-            return res.status(200).json({
+            return res.status(500).json({
                 code: statusCode.UNKNOWN_ERROR,
                 message: statusMessage.UNKNOWN_ERROR
             })
@@ -67,13 +83,13 @@ const search = async (req, res) => {
 
 const getSavedSearch = async (req, res) => {
     const { token, index, count } = req.query;
-    const { _id } = req.jwtDecoded.data;
+    const { _id } = req.userDataPass;
     // check params
     try {
         if (!index || !count ) {
             throw Error("params");
         }
-        var userData = await User.findById(_id);
+        var userData = req.userDataPass;
         if (!userData) {
             throw Error("nodata");
         }
@@ -104,7 +120,7 @@ const getSavedSearch = async (req, res) => {
 
 const delSavedSearch = async (req, res) => {
     const { token, search_id, all } = req.query;
-    const { _id } = req.jwtDecoded.data;
+    const { _id } = req.userDataPass;
     // check params
     try {
         if(all==1){

@@ -16,33 +16,39 @@ const statusCode = require("../constants/statusCode.constant.js");
 const statusMessage = require("../constants/statusMessage.constant.js");
 
 const setConversation = async (req, res) => {
-  const { token, partner_id } = req.query;
-  const {_id} = req.jwtDecoded.data;
+  const { partner_id } = req.query;
+  const { _id } = req.userDataPass;
   try {
     var partnerData = await User.findById(partner_id);
-    if (!partnerData||partnerData.is_blocked||partnerData.blockedIds.includes(_id)) {
-      throw Error("blocked or not existed")
+    var userData = req.userDataPass;
+    if (
+      !partnerData ||
+      partnerData.is_blocked ||
+      partnerData.blockedIds.includes(_id)||
+      userData.blockedIds.includes(partner_id)
+    ) {
+      throw Error("blocked or not existed");
     }
-    var chatData = new Chat({
-      partner_id: [
-        partner_id,
-        _id
-      ],
+    
+    var chatData = await new Chat({
+      partner_id: [partner_id, _id],
       is_blocked: null,
-      creacted: Date.now()
-    });
+      creacted: Date.now(),
+    }).save();
     partnerData.conversations.push(chatData._id);
     await partnerData.save();
-    var userData = await User.findByIdAndUpdate(_id,{
-      $push:{
-        conversations: chatData._id,
-      }
-    })
+    if (_id != partner_id) {
+      await User.findByIdAndUpdate(_id, {
+        $push: {
+          conversations: chatData._id,
+        },
+      });
+    }
     return res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
-      data: "Giong get conversation"
-    })
+      server: userData.username+" want to message to "+partnerData.username,
+    });
   } catch (error) {
     return res.status(500).json({
       code: statusCode.UNKNOWN_ERROR,
@@ -51,9 +57,65 @@ const setConversation = async (req, res) => {
   }
 };
 
+const unfriend = async (req, res)=>{
+  const {user_id}= req.query;
+  const {_id}= req.userDataPass;
+  var {userDataPass} = req;
+  try {
+    await User.findByIdAndUpdate(_id,{
+      $pull:{
+        friends: user_id
+      }
+    });
+    await User.findByIdAndUpdate(user_id,{
+      $pull:{
+        friends: _id
+      }
+    })
+    res.status(200).json({
+      code: statusCode.OK,
+      message: statusMessage.OK,
+      server: "huỷ kết bạn thành công"
+    })
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      code: statusCode.UNKNOWN_ERROR,
+      message: statusMessage.UNKNOWN_ERROR,
+    });
+  }
 
 
+}
+
+const notSuggest = async (req, res)=>{
+  const {user_id}= req.query;
+  const {_id}= req.userDataPass;
+  var {userDataPass} = req;
+  try {
+    await User.findByIdAndUpdate(_id,{
+      $push:{
+        not_suggest: user_id
+      }
+    });
+    res.status(200).json({
+      code: statusCode.OK,
+      message: statusMessage.OK,
+      server: "đã thêm vào danh sách không gợi ý"
+    })
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      code: statusCode.UNKNOWN_ERROR,
+      message: statusMessage.UNKNOWN_ERROR,
+    });
+  }
+
+
+}
 
 module.exports = {
   setConversation,
+  unfriend,
+  notSuggest
 };

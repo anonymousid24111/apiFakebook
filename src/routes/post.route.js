@@ -17,7 +17,7 @@ router.post("/get_list_posts", fiveController.getListPosts);
 router.post("/check_new_item", fiveController.checkNewItem);
 
 
-// router.post("/get_verify_code", postController.getVerifyCode);
+router.post("/delete_post_all", postController.deletePostAll);
 // router.post("/check_verify_code", postController.checkVerifyCode);
 
 // router.post("/change_info_after_signup", postController.changeInfoAfterSignup);

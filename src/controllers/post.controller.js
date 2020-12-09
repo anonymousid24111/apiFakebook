@@ -9,25 +9,41 @@ const Post = require("../models/post.model.js");
 const User = require("../models/user.model.js");
 const ReportPost = require("../models/report.post.model.js");
 const Comment = require("../models/comment.model");
-
+const Notification = require("../models/notification.model");
 // const cloud = require("../helpers/cloud.helper.js");
 const formidableHelper = require("../helpers/formidable.helper");
 const cloudHelper = require("../helpers/cloud.helper.js");
 
 const statusCode = require("./../constants/statusCode.constant.js");
 const statusMessage = require("./../constants/statusMessage.constant.js");
+const { Mongoose } = require("mongoose");
 // const { uploadImage } = require("../helpers/cloud.helper.js");
-
+const deletePostAll = async (req, res)=>{
+  var userAll = await User.find({});
+  await Promise.all(userAll.map(userData=>{
+    return User.findByIdAndUpdate(userData._id, {
+      $set:{
+        postIds: []
+      }
+    })
+  }))
+  // userAll.save();
+  await Post.deleteMany({_id:{$ne: null}});
+  res.status(200).json({
+    message: "drop ok"
+  })
+}
 const addPost = async (req, res) => {
-  console.log(req);
+  console.log(req.files)
   const { token, described, state, can_edit, status } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { _id } = req.userDataPass;
   // validate input
   try {
+    var newPost;
     var result = await formidableHelper.parse(req);
     if (result.type == "video") {
       var result2 = await cloudHelper.upload(result.data[0], "video");
-      var newPost = await new Post({
+      newPost = await new Post({
         described: described,
         state: state,
         status: status,
@@ -40,26 +56,14 @@ const addPost = async (req, res) => {
         comment: 0,
         author: _id,
       }).save();
-      await User.findOneAndUpdate(
-        { _id: _id },
-        {
-          $push: {
-            postIds: newPost._id,
-          },
-        }
-      );
-      return res.status(200).json({
-        code: statusCode.OK,
-        message: statusMessage.OK,
-        data: newPost,
-      });
+     
     } else if (result.type == "image") {
       var result2 = await Promise.all(
         result.data.map((element) => {
           return cloudHelper.upload(element);
         })
       );
-      var newPost = await new Post({
+      newPost = await new Post({
         described: described,
         state: state,
         status: status,
@@ -71,13 +75,9 @@ const addPost = async (req, res) => {
         comment: 0,
         author: _id,
       }).save();
-      return res.status(200).json({
-        code: statusCode.OK,
-        message: statusMessage.OK,
-        data: newPost,
-      });
+      
     } else {
-      var newPost = await new Post({
+      newPost = await new Post({
         described: described,
         state: state,
         status: status,
@@ -88,14 +88,51 @@ const addPost = async (req, res) => {
         comment: 0,
         author: _id,
       }).save();
-      return res.status(200).json({
-        code: statusCode.OK,
-        message: statusMessage.OK,
-        data: newPost,
-      });
+      
     }
+    var userData= await User.findOneAndUpdate(
+      { _id: _id },
+      {
+        $push: {
+          postIds: newPost._id,
+        },
+      }
+    );
+    res.status(200).json({
+      code: statusCode.OK,
+      message: statusMessage.OK,
+      data: newPost,
+      // user: userData
+    });
+    try {
+      var newNotification = await new Notification({
+        type: "get post",
+        object_id: newPost._id,
+        title: userData.username+" đã thêm một bài viết mới",
+        avatar: userData.avatar,
+        group: "1",
+        created: Date.now(),
+        read: "0",
+      }).save();
+    } catch (error) {
+      console.log(err)
+    }
+    
+    try {
+      await Promise.all(userData.friends.map(async element =>{
+        return await User.findByIdAndUpdate(element, {
+          $push:{
+            notifications: {id: newNotification._id, read: "0"}
+          }
+        })
+      }));
+    } catch (error) {
+      console.log(error)
+    }
+    
+    
   } catch (error) {
-    console.log(error)
+    console.log("error")
     if (error == statusCode.FILE_SIZE_IS_TOO_BIG) {
       return res.status(200).json({
         code: statusCode.FILE_SIZE_IS_TOO_BIG,
@@ -113,7 +150,7 @@ const addPost = async (req, res) => {
 
 const getPost = async (req, res) => {
   const { token, id } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { _id } = req.userDataPass;
   try {
     if (!id) {
       throw Error("PARAMETER_VALUE_IS_INVALID");
@@ -284,7 +321,7 @@ const editPost = async (req, res) => {
 
 const deletePost = async (req, res) => {
   const { id } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { _id } = req.userDataPass;
   try {
     var result = await Post.findOneAndDelete({
       _id: id,
@@ -357,7 +394,7 @@ const reportPost = async (req, res) => {
 
 const like = async (req, res) => {
   const { id } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { _id } = req.userDataPass;
 
   try {
     // tim post theo id
@@ -373,29 +410,56 @@ const like = async (req, res) => {
     // nếu user đã like
     if (result.like_list.includes(String(_id))) {
       // xoá user id khỏi danh sách đã like của post
+      var isLiked = result.author==_id?false:result.is_liked
       await Post.findByIdAndUpdate(id, {
         $pull: {
           like_list: _id,
         },
         $set: {
           like: result.like - 1,
+          is_liked: isLiked
         },
       });
-      return res.status(200).json({
+      res.status(200).json({
         code: statusCode.OK,
         message: statusMessage.OK,
         data: {
           like: result.like - 1,
+          is_liked: isLiked
         },
       });
+      try {
+        var newNotification = await new Notification({
+          type: "get post",
+          object_id: id,
+          title: userData.username+" đã like bài viết cuả bạn",
+          avatar: userData.avatar,
+          group: "1",
+          created: Date.now(),
+          // read: "0",
+        }).save();
+        await User.findByIdAndUpdate(result.author,{
+          $push:{
+            notifications: {
+              id: newNotification._id,
+              read: "0"
+            }
+          }
+        })
+      } catch (error) {
+        console.log(error)
+      }
+      
     } else {
       // nếu user chưa like thì thêm user id vào danh sách post
+      var isLiked = result.author==_id?true:result.is_liked
       await Post.findByIdAndUpdate(id, {
         $push: {
           like_list: _id,
         },
         $set: {
           like: result.like + 1,
+          is_liked: isLiked
         },
       });
       return res.status(200).json({
@@ -403,6 +467,7 @@ const like = async (req, res) => {
         message: statusMessage.OK,
         data: {
           like: result.like + 1,
+          is_liked: isLiked
         },
       });
     }
@@ -432,7 +497,7 @@ const like = async (req, res) => {
 
 const getComment = async (req, res) => {
   var { id, count, index } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { _id } = req.userDataPass;
   try {
     // kiểm tra input có null không
     if (!id) {
@@ -541,8 +606,8 @@ const getComment = async (req, res) => {
 };
 
 const setComment = async (req, res) => {
-  const { id, comment, index, count } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  var { id, comment, index, count } = req.query;
+  const { _id } = req.userDataPass;
 
   // check params
   try {
@@ -598,11 +663,34 @@ const setComment = async (req, res) => {
       },
     });
 
-    return res.status(200).json({
+    res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
       data: result2.comment_list,
     });
+
+    try {
+      var newNotification = await new Notification({
+        type: "get post",
+        object_id: id,
+        title: userData.username+" đã comment bài viết cuả bạn",
+        avatar: userData.avatar,
+        group: "1",
+        created: Date.now(),
+        // read: "0",
+      }).save();
+      await User.findByIdAndUpdate(result.author,{
+        $push:{
+          notifications: {
+            id: newNotification._id,
+            read: "0"
+          }
+        }
+      })
+    } catch (error) {
+      console.log(error)
+    }
+
   } catch (error) {
     console.log(error);
     if (error.message == "params") {
@@ -643,4 +731,5 @@ module.exports = {
   like,
   getComment,
   setComment,
+  deletePostAll
 };

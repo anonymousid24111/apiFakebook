@@ -7,7 +7,7 @@ let sameFriends = (friends, user_id) => {
     var result = await User.findById(user_id).select("username avatar friends");
     var count = 0;
     result.friends.forEach((element) => {
-      if (friends.includes(element)) {
+      if (friends.includes(element)||(element&&friends.includes(element._id))) {
         count++;
       }
     });

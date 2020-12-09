@@ -30,7 +30,7 @@ const getConversation = async (req, res) => {
       code: statusCode.OK,
       message: statusMessage.OK,
       data: {
-        conversation: chatData.conversation.slice(index, count),
+        conversation: chatData.conversation,
         is_blocked: chatData.is_blocked == _id,
       },
     });
@@ -43,12 +43,16 @@ const getConversation = async (req, res) => {
 };
 
 const getListConversation = async (req, res) => {
-  var { index, count } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  var {  index, count } = req.query;
+  const { _id } = req.userDataPass;
   try {
-
+    if(!index||!count||index<0||count<0){
+      index=0;
+      count=20;
+    }
+    
     var userData = await User.findById(_id).populate({
-      path: "conversation",
+      path: "conversations",
       select: "partner_id created is_blocked conversation",
       sort: {
         created: -1,
@@ -58,20 +62,22 @@ const getListConversation = async (req, res) => {
         select: "username avatar",
       },
     });
+    console.log(userData.conversations)
     var numNewMessage= 0;
-    userData.conversation.map((element) => {
+    userData.conversations.forEach((element) => {
       
-      element.conversation = element.conversation[0];
+      element.conversation = element.conversation[element.conversation.length-1];
       if(element.conversation[0].unread=="1") numNewMessage+=1;
-      return element;
+      // return element;
     });
     return res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
-      data: userData.conversation,
+      data: userData.conversations,
       numNewMessage: numNewMessage,
     });
   } catch (error) {
+    console.log(error)
     return res.status(500).json({
       code: statusCode.UNKNOWN_ERROR,
       message: statusMessage.UNKNOWN_ERROR,
@@ -80,10 +86,10 @@ const getListConversation = async (req, res) => {
 };
 
 const setReadMessage = async (req, res) => {
-  const { token, partner_id, conversation_id} = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { partner_id, conversation_id} = req.query;
+  const { _id } = req.userDataPass;
   try {
-    var userData = await User.findById(_id);
+    var userData = req.userDataPass;
     if(!userData||userData.blockedIds.inclules(partner_id)){
       throw Error("nodata")
     }
@@ -126,7 +132,7 @@ const setReadMessage = async (req, res) => {
 
 const deleteConversation = async (req, res) => {
   const { token, partner_id, conversation_id, message_id } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { _id } = req.userDataPass;
   try {
     var chatData = await Chat.findByIdAndUpdate(conversation_id, {
       $pull:{
@@ -158,7 +164,7 @@ const deleteConversation = async (req, res) => {
 
 const deleteMessage = async (req, res) => {
   const { token, partner_id, conversation_id, message_id } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { _id } = req.userDataPass;
   try {
     var chatData = await Chat.findByIdAndUpdate(conversation_id, {
       $pull:{

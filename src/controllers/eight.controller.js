@@ -1,16 +1,8 @@
 const dotenv = require("dotenv");
 dotenv.config();
-const fs = require("fs");
-const formidable = require("formidable");
-const { getVideoDurationInSeconds } = require("get-video-duration");
-const mongoose = require("mongoose");
 var ObjectId = require("mongoose").Types.ObjectId;
-const Post = require("../models/post.model.js");
 const User = require("../models/user.model.js");
-const Request = require("../models/request.model.js");
-
-const ReportPost = require("../models/report.post.model.js");
-const Comment = require("../models/comment.model");
+const Notification = require("../models/notification.model");
 
 const sameFriendsHelper = require("../helpers/sameFriends.helper.js");
 
@@ -19,8 +11,8 @@ const statusMessage = require("../constants/statusMessage.constant.js");
 const commonConstant = require("../constants/common.constant.js");
 
 const setAcceptFriend = async (req, res) => {
-  const { token, user_id, is_accept } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { user_id, is_accept } = req.query;
+  const { _id } = req.userDataPass;
   try {
     if (!user_id || !ObjectId.isValid(user_id) || user_id == _id) {
       console.log("lỗi user_id không hợp lệ");
@@ -57,6 +49,7 @@ const setAcceptFriend = async (req, res) => {
           },
         },
       });
+     
       return res.status(200).json({
         code: statusCode.OK,
         message: statusMessage.OK,
@@ -64,18 +57,9 @@ const setAcceptFriend = async (req, res) => {
     }
     if (is_accept == 1) {
       // kiểm tra xem đã kết bạn chưa
-      var friendData = await User.findByIdAndUpdate(user_id, {
-        $pull: {
-          sendRequestedFriends: {
-            receiver: _id,
-          },
-        },
-        $push: {
-          friends: _id,
-        },
-      });
+      
       // tìm user và xoá requested friend có author == user_id
-      await User.findByIdAndUpdate(_id, {
+      var userData = await User.findByIdAndUpdate(_id, {
         $pull: {
           requestedFriends: {
             author: user_id,
@@ -85,12 +69,33 @@ const setAcceptFriend = async (req, res) => {
           friends: user_id,
         },
       });
-      return res.status(200).json({
+      res.status(200).json({
         code: statusCode.OK,
         message: statusMessage.OK,
       });
+     
+      var newNotification =await new Notification({
+        type: "trang user",
+        object_id: user_id,
+        title: userData.username+" đã chấp nhận lời mời kết bạn",
+        created: Date.now(),
+        avatar: userData.avatar,
+        group: "1"
+      }).save();
+      var friendData = await User.findByIdAndUpdate(user_id, {
+        $pull: {
+          sendRequestedFriends: {
+            receiver: _id,
+          },
+        },
+        $push: {
+          friends: _id,
+          notifications: {id:newNotification._id, read: "0"}
+        },
+      });
     }
   } catch (error) {
+    console.log(error)
     if (error.message == "params") {
       return res.status(200).json({
         code: statusCode.PARAMETER_VALUE_IS_INVALID,
@@ -116,13 +121,15 @@ const setAcceptFriend = async (req, res) => {
 };
 
 const getListSuggestedFriends = async (req, res) => {
-  const { token, index, count } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  var {  index, count } = req.query;
+  const { _id } = req.userDataPass;
+  var {userDataPass}= req;
   try {
-    if (!index || !count || count < 0) {
-      throw Error("params");
+    if (!index || !count || count < 0|| index<0) {
+      index=0;
+      count=20;
     }
-    var userData = await User.findById(_id);
+    var userData = userDataPass;
     var otherUsersData = await User.find({});
     var result = await Promise.all(
       otherUsersData.map((element) => {
@@ -130,7 +137,8 @@ const getListSuggestedFriends = async (req, res) => {
           userData.friends.includes(element._id) ||
           _id == element._id ||
           userData.blockedIds.includes(element._id) ||
-          element.blockedIds.includes(_id)
+          element.blockedIds.includes(_id)||
+          userData.not_suggest.includes(element._id)
         ) {
           return -1;
         }
@@ -163,14 +171,14 @@ const getListSuggestedFriends = async (req, res) => {
 
 const setRequestFriend = async (req, res) => {
   const { token, user_id } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { _id } = req.userDataPass;
   try {
     if (!user_id || _id == user_id || !ObjectId.isValid(user_id)) {
       console.log("check ");
       throw Error("params");
     }
     // tìm dữ liệu user
-    var userData = await User.findById(_id);
+    var userData = req.userDataPass;
     // kiểm tra receiver có gửi lời mời đến user không(có thì add bạn luôn)
     var receiverRequested = -1;
     userData.requestedFriends.map((element, index) => {
@@ -301,7 +309,7 @@ const setRequestFriend = async (req, res) => {
 
 const getListBlocks = async (req, res) => {
   const { token, index, count } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { _id } = req.userDataPass;
   try {
     if (index < 0 || count < 0) {
       throw Error("params");

@@ -19,30 +19,20 @@ const statusMessage = require("../constants/statusMessage.constant.js");
 
 const setUserInfo = async (req, res) => {
   const {
-    token,
     username,
-    decription,
+    description,
     address,
     city,
     country,
     link,
   } = req.query;
-  const {_id}= req.jwtDecoded.data;
+  const {_id}= req.userDataPass;
   try {
-    if (!username ||
-      username.match(/[^a-z|A-Z|0-9|\s]/g) ||
-      // username === phonenumber ||
-      username.length < 6 ||
-      username.length > 50||
-      (decription&&decription.length>150)
-    ) {
-      throw Error("params")
-    }
     var result = await formidableHelper.parseInfo(req);
-    var userData = await User.findById(_id);
+    var userData = req.userDataPass;
     userData.avatar = result.avatar?result.avatar.url:userData.avatar;
     userData.cover_image = result.cover_image?result.cover_image.url:userData.cover_image;
-    userData.decription = decription?decription:userData.decription;
+    userData.description = description?description:userData.description;
     userData.username = username?username:userData.username;
     userData.address = address?address:userData.address;
     userData.city = city?city:userData.city;
@@ -53,11 +43,13 @@ const setUserInfo = async (req, res) => {
       code: statusCode.OK,
       message: statusMessage.OK,
       data: {
-        avatar: result.avatar?result.avatar.url:null,
-        cover_image: result.cover_image?result.cover_image.url:null,
+        username: username,
+        avatar: result.avatar?result.avatar.url:userData.avatar,
+        cover_image: result.cover_image?result.cover_image.url:userData.cover_image,
         country: country,
+        city: city,
         link: "server không cho phép thay",
-        decription: decription
+        description: description
       }
     })
   } catch (error) {
@@ -79,26 +71,30 @@ const setUserInfo = async (req, res) => {
 
 const getUserInfo = async (req, res) => {
   const { token, user_id } = req.query;
-  const { _id } = req.jwtDecoded.data;
+  const { _id } = req.userDataPass;
   try {
     // nếu tự xem thông tin của mình
     if (user_id == _id || !user_id) {
       console.log("trùng với id của user");
-      var userData = await User.findById(_id);
+      var userData = await User.findById(_id).populate({
+        path: "friends",
+        select: "username avatar"
+      });
       var listing = userData.friends.length;
+      userData.listing = listing;
       return res.status(200).json({
         code: statusCode.OK,
         message: statusMessage.OK,
-        data: {
-          ...userData,
-          listing: listing,
-        },
+        data: userData,
       });
     }
     // nếu xem thông tin của người khác
     var otherUserData = await User.findById(user_id).select(
-      "username created decription avatar cover_image link address city country friends"
-    );
+      "username created description avatar cover_image link address city country friends blockedIds"
+    ).populate({
+      path: "friends",
+      select: "username avatar"
+    });;
     if (
       !otherUserData ||
       otherUserData.is_blocked ||
@@ -106,18 +102,19 @@ const getUserInfo = async (req, res) => {
     ) {
       throw Error("notfound");
     }
-    var listing = otherUserData.friends.length;
-    var is_friend = otherUserData.friends.includes(_id);
+    otherUserData.is_friend = otherUserData.friends.includes(_id);
+    otherUserData.listing = otherUserData.friends.length;
+    var userData = req.userDataPass;
+    var result = await sameFriendsHelper.sameFriends(userData.friends, user_id);
+    delete otherUserData.blockedIds;
     return res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
-      data: {
-        ...otherUserData,
-        listing: listing,
-        is_friend: is_friend,
-      },
+      data: otherUserData,
+      sameFriends: result.same_friends
     });
   } catch (error) {
+    console.log(error)
     if (error.message == "notfound") {
       return res.status(500).json({
         code: statusCode.USER_IS_NOT_VALIDATED,
@@ -133,17 +130,17 @@ const getUserInfo = async (req, res) => {
 };
 
 const getNotification = async (req, res) => {
-  const { token, index, count } = req.query;
-  const {_id}= req.jwtDecoded.data;
+  var { index, count } = req.query;
+  const {_id}= req.userDataPass;
   try {
     index=index?index:0; 
     count=count?count:20;
     
     var userData = await User.findById(_id).populate({
-      path: "notifications",
+      path: "notifications.id",
       // select: "username avatar",
     });
-    return res.status(500).json({
+    return res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
       data: userData.notifications,
@@ -157,16 +154,17 @@ const getNotification = async (req, res) => {
 };
 
 const setReadNotification = async (req, res) => {
-  const { token, notification_id } = req.query;
-  const {_id}= req.jwtDecoded.data;
+  const { notification_id } = req.query;
+  const {_id}= req.userDataPass;
   try {
-    // var userData = await User.findByIdAndUpdate(_id, {
-
-    // }).populate({
-    //   path: "notifications",
-    //   // select: "username avatar",
-    // });
-    return res.status(500).json({
+    var userData = req.userDataPass;
+    userData.notifications.map(e=>{
+      if (e.id==notification_id) {
+        e.read="1";
+      }
+    });
+    await userData.save()
+    return res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
       data: userData.notifications,

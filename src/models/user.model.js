@@ -75,9 +75,16 @@ const userSchema = new mongoose.Schema({
     },
   ],
   notifications:[{
+    id: {
+      type: Schema.Types.ObjectId,
+      ref: "notification",
+    },
+    read: String
+  },],
+  not_suggest:[ {
     type: Schema.Types.ObjectId,
-    ref: "notification",
-  }]
+    ref: "user",
+  },]
 });
 
 const User = mongoose.model("user", userSchema);
