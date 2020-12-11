@@ -102,7 +102,7 @@ const getUserInfo = async (req, res) => {
     ) {
       throw Error("notfound");
     }
-    is_friend = req.userDataPass.friends.includes(user_id)?"1":"0";
+    is_friend = req.userDataPass.friends.find(e=>e==user_id)?"1":"0";
     sendRequested = req.userDataPass.sendRequestedFriends.find(e=>e.receiver==user_id)?"1":"0";
     requested = req.userDataPass.requestedFriends.find(e=>e.author==user_id)?"1":"0";
     otherUserData.listing = otherUserData.friends.length;
