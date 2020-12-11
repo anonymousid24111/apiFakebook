@@ -20,10 +20,8 @@ const search = async (req, res) => {
     const { _id } = req.userDataPass;
     // check params
     try {
-        if(!index||!count||index<0||count<0){
-            index=0;
-            count=20;
-        }
+        index = index ? index : 0;
+        count = count ? count : 20;
         if (!keyword) {
             throw Error("params");
         }
@@ -82,13 +80,12 @@ const search = async (req, res) => {
 }
 
 const getSavedSearch = async (req, res) => {
-    const { token, index, count } = req.query;
+    var { token, index, count } = req.query;
     const { _id } = req.userDataPass;
     // check params
     try {
-        if (!index || !count ) {
-            throw Error("params");
-        }
+        index = index ? index : 0;
+    count = count ? count : 20;
         var userData = req.userDataPass;
         if (!userData) {
             throw Error("nodata");

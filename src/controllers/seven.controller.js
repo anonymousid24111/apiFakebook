@@ -9,13 +9,11 @@ const statusCode = require("../constants/statusCode.constant.js");
 const statusMessage = require("../constants/statusMessage.constant.js");
 
 const getRequestedFriends = async (req, res) => {
-  const { index, count } = req.query;
+  var { index, count } = req.query;
   const { _id } = req.userDataPass;
   try {
-    if(!index||!count||index<0||count<0){
-      index=0;
-      count=20;
-    }
+    index = index ? index : 0;
+    count = count ? count : 20;
     var userData = await User.findById(_id).populate({
       path: "requestedFriends.author",
       // select: "author._id author.username author.avatar",
@@ -119,10 +117,8 @@ const getUserFriends = async (req, res) => {
   var { index, count, user_id } = req.query;
   const {_id}= req.userDataPass;
   try {
-    if(!index||!count||index<0||count<0){
-      index=0;
-      count=20;
-    }
+    index = index ? index : 0;
+    count = count ? count : 20;
     if(user_id){
       var userData = await User.findById(user_id);
       var resultSameFriend =await Promise.all(

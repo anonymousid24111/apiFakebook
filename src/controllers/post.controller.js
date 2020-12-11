@@ -561,7 +561,7 @@ const getComment = async (req, res) => {
       return res.status(200).json({
         code: statusCode.OK,
         message: statusMessage.OK,
-        data: result3,
+        data: result3.slice(Number(index),Number(index)+Number(count) ),
       });
     }
   } catch (err) {
@@ -623,8 +623,8 @@ const setComment = async (req, res) => {
     if (!comment || !id ) {
       throw Error("params");
     }
-    index = index ? index : 0;
-    count = count ? count : 20;
+    // index = index ? index : 0;
+    // count = count ? count : 20;
     // tim bai viet
     var result = await Post.findOne({ _id: id });
     // neu khong tim thay bai viet
@@ -664,7 +664,7 @@ const setComment = async (req, res) => {
     }).populate({
       path: "comment_list",
       // skip: index||1,
-      options: { skip: index, sort: { created: -1 }, limit: count },
+      options: { sort: { created: -1 } },
 
       populate: {
         path: "poster",
@@ -675,7 +675,7 @@ const setComment = async (req, res) => {
     res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
-      data: result2.comment_list,
+      data: result2.comment_list.slice(Number(index),Number(index)+Number(count) ),
     });
 
     try {

@@ -149,10 +149,8 @@ const getListSuggestedFriends = async (req, res) => {
   const { _id } = req.userDataPass;
   var {userDataPass}= req;
   try {
-    if (!index || !count || count < 0|| index<0) {
-      index=0;
-      count=20;
-    }
+    index = index ? index : 0;
+    count = count ? count : 20;
     var userData = userDataPass;
     var requestedFriends = userData.requestedFriends.map(e=>{
       return e.author;

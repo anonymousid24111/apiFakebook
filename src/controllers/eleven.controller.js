@@ -46,10 +46,8 @@ const getListConversation = async (req, res) => {
   var {  index, count } = req.query;
   const { _id } = req.userDataPass;
   try {
-    if(!index||!count||index<0||count<0){
-      index=0;
-      count=20;
-    }
+    index = index ? index : 0;
+    count = count ? count : 20;
     
     var userData = await User.findById(_id).populate({
       path: "conversations",
