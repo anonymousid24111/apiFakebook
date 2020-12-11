@@ -30,11 +30,13 @@ const getListPosts = async (req, res) => {
   const { _id } = req.userDataPass;
   // check params
   try {
-    if (!index || !count) {
-      // throw Error("params");
-      index = 0;
-      count = 20;
-    }
+    // if (index || !count) {
+    //   // throw Error("params");
+    //   index = 0;
+    //   count = 20;
+    // }
+    if(index==null||index=="") index=0;
+    if(count==null||count=="") count=20;
     if(user_id){
       var resultData = await User.findById(user_id).populate({
         
