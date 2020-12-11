@@ -154,6 +154,12 @@ const getListSuggestedFriends = async (req, res) => {
       count=20;
     }
     var userData = userDataPass;
+    var requestedFriends = userData.requestedFriends.map(e=>{
+      return e.author;
+    });
+    var sendRequestedFriends = userData.sendRequestedFriends.map(e=>{
+      return e.receiver;
+    })
     var otherUsersData = await User.find({});
     var result = await Promise.all(
       otherUsersData.map((element) => {
@@ -162,7 +168,9 @@ const getListSuggestedFriends = async (req, res) => {
           _id == element._id ||
           userData.blockedIds.includes(element._id) ||
           element.blockedIds.includes(_id)||
-          userData.not_suggest.includes(element._id)
+          userData.not_suggest.includes(element._id)||
+          requestedFriends.includes(element._id)||
+          sendRequestedFriends.includes(element._id)
         ) {
           return -1;
         }
