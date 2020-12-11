@@ -90,7 +90,7 @@ const getUserInfo = async (req, res) => {
     }
     // nếu xem thông tin của người khác
     var otherUserData = await User.findById(user_id).select(
-      "username created description avatar cover_image link address city country friends blockedIds"
+      "username created description avatar cover_image link address city country friends blockedIds is_blocked"
     ).populate({
       path: "friends",
       select: "username avatar"
@@ -102,7 +102,9 @@ const getUserInfo = async (req, res) => {
     ) {
       throw Error("notfound");
     }
-    otherUserData.is_friend = otherUserData.friends.includes(_id);
+    is_friend = otherUserData.friends.includes(_id)?"1":"0";
+    sendRequested = req.userDataPass.sendRequestedFriends.find(e=>e.receiver==user_id)?"1":"0";
+    requested = req.userDataPass.requestedFriends.find(e=>e.author==user_id)?"1":"0";
     otherUserData.listing = otherUserData.friends.length;
     var userData = req.userDataPass;
     var result = await sameFriendsHelper.sameFriends(userData.friends, user_id);
@@ -111,7 +113,11 @@ const getUserInfo = async (req, res) => {
       code: statusCode.OK,
       message: statusMessage.OK,
       data: otherUserData,
-      sameFriends: result.same_friends
+      sameFriends: result.same_friends,
+      is_friend: is_friend,
+      sendRequested: sendRequested,
+      requested:requested
+
     });
   } catch (error) {
     console.log(error)
