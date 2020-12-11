@@ -182,7 +182,7 @@ const getListSuggestedFriends = async (req, res) => {
       code: statusCode.OK,
       message: statusMessage.OK,
       data: {
-        list_users: result.slice(index, count),
+        list_users: result.slice(Number(index),Number(index)+Number(count) ),
       },
     });
   } catch (error) {

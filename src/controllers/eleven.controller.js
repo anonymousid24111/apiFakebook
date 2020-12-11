@@ -178,7 +178,7 @@ const deleteMessage = async (req, res) => {
       code: statusCode.OK,
       message: statusMessage.OK,
       data: {
-        conversation: chatData.conversation.slice(index, count),
+        conversation: chatData.conversation.slice(Number(index),Number(index)+ Number(count)),
         is_blocked: chatData.is_blocked == _id,
       },
     });

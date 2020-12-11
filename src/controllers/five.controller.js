@@ -35,6 +35,7 @@ const getListPosts = async (req, res) => {
     //   index = 0;
     //   count = 20;
     // }
+    console.log(index, count)
     if(index==null||index=="") index=0;
     if(count==null||count=="") count=20;
     if(user_id){
@@ -111,7 +112,7 @@ const getListPosts = async (req, res) => {
       code: statusCode.OK,
       message: statusMessage.OK,
       data: {
-        posts: postRes.slice(index, index + count),
+        posts: postRes.slice(Number(index),Number(index)+ Number(count)),
         last_id: postRes[0]._id,
         new_items: postRes.length-count,
       },
