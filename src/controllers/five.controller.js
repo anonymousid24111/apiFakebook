@@ -41,6 +41,18 @@ const getListPosts = async (req, res) => {
         path: "postIds",
         populate: {
           path: "author",
+          select: "username avatar",
+        },
+        populate: {
+          path: "comment_list",
+          populate:{
+            path: "poster",
+            select: "username avatar"
+          }
+          // select: "username avatar",
+        },
+        populate: {
+          path: "like_list",
           select: "username avatar"
         },
         options: {

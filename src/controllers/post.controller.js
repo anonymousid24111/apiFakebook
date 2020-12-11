@@ -158,7 +158,16 @@ const getPost = async (req, res) => {
     var result = await Post.findOne({ _id: id }).populate({
       path: "author",
       select: "_id username avatar",
-    });
+          }).populate({
+            path: "like_list",
+            select:"username avatar"
+          }).populate({
+            path: "comment_list",
+            populate:{
+              path: "poster",
+              select: "username avatar"
+            }
+          });
     // console.log(result);
     if (!result || result.is_blocked) {
       // không tìm thấy bài viết hoặc vi phạm tiêu chuẩn cộng đồng
@@ -655,11 +664,11 @@ const setComment = async (req, res) => {
     }).populate({
       path: "comment_list",
       // skip: index||1,
-      options: { skip: 0, sort: { created: -1 }, limit: count },
+      options: { skip: index, sort: { created: -1 }, limit: count },
 
       populate: {
         path: "poster",
-        select: "_id avatar username created",
+        select: "_id avatar username",
       },
     });
 
