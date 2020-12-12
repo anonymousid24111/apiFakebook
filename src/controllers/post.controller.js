@@ -403,7 +403,7 @@ const reportPost = async (req, res) => {
 
 const like = async (req, res) => {
   const { id } = req.query;
-  const { _id } = req.userDataPass;
+  const { _id } = req.userDataPass._id;
 
   try {
     // tim post theo id
@@ -419,7 +419,7 @@ const like = async (req, res) => {
     // nếu user đã like
     if (result.like_list.includes(String(_id))) {
       // xoá user id khỏi danh sách đã like của post
-      var isLiked = result.author==_id?false:result.is_liked
+      var isLiked = false;
       await Post.findByIdAndUpdate(id, {
         $pull: {
           like_list: _id,
@@ -441,8 +441,8 @@ const like = async (req, res) => {
         var newNotification = await new Notification({
           type: "get post",
           object_id: id,
-          title: userData.username+" đã like bài viết cuả bạn",
-          avatar: userData.avatar,
+          title: req.userDataPass.username+" đã like bài viết cuả bạn",
+          avatar: req.userDataPass.avatar,
           group: "1",
           created: Date.now(),
           // read: "0",
@@ -461,7 +461,7 @@ const like = async (req, res) => {
       
     } else {
       // nếu user chưa like thì thêm user id vào danh sách post
-      var isLiked = result.author==_id?true:result.is_liked
+      var isLiked = true;
       await Post.findByIdAndUpdate(id, {
         $push: {
           like_list: _id,
