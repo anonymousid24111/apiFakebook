@@ -19,7 +19,7 @@ const getConversation = async (req, res) => {
   var { partner_id, conversation_id, index, count } = req.query;
   const { _id } = req.jwtDecoded.data;
   try {
-    if(conversation_id){
+    if(conversation_id&&conversation_id.length>1){
       var chatData = await Chat.findById(conversation_id).populate({
         path: "sender",
         select: "username avatar",
@@ -39,7 +39,7 @@ const getConversation = async (req, res) => {
         },
       });
     }
-    else if(partner_id){
+    else if(partner_id&&partner_id.length>1){
       console.log(_id, partner_id)
       var chatData = await Chat.findOne({partner_id: {
         $all:[
@@ -68,7 +68,40 @@ const getConversation = async (req, res) => {
       });
     }
     else{
-      throw Error("nodata");
+      var partnerData = await User.findById(partner_id);
+    var userData = req.userDataPass;
+    if (
+      !partnerData ||
+      partnerData.is_blocked ||
+      partnerData.blockedIds.includes(_id)||
+      userData.blockedIds.includes(partner_id)
+    ) {
+      throw Error("blocked or not existed");
+    }
+    
+    var chatData = await new Chat({
+      partner_id: [partner_id, _id],
+      is_blocked: null,
+      created: Date.now(),
+    }).save();
+    partnerData.conversations.push(chatData._id);
+    await partnerData.save();
+    if (_id != partner_id) {
+      await User.findByIdAndUpdate(_id, {
+        $push: {
+          conversations: chatData._id,
+        },
+      });
+    }
+    return res.status(200).json({
+      code: statusCode.OK,
+      message: statusMessage.OK,
+      data: {
+        conversation: [],
+        is_blocked: false
+      },
+      server: userData.username+" want to message to "+partnerData.username,
+    });
     }
     
   } catch (error) {
