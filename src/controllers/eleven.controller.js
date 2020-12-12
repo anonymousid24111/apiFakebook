@@ -63,6 +63,7 @@ const getConversation = async (req, res) => {
         code: statusCode.OK,
         message: statusMessage.OK,
         data: {
+          conversation_id: chatData._id,
           conversation: chatData.conversation,
           is_blocked: chatData.is_blocked == _id,
         },
