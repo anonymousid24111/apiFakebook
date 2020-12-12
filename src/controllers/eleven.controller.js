@@ -19,7 +19,7 @@ const getConversation = async (req, res) => {
   var { partner_id, conversation_id, index, count } = req.query;
   const { _id } = req.jwtDecoded.data;
   try {
-    if(conversation_id&&conversation_id.length>1){
+    if (conversation_id && conversation_id.length > 1) {
       var chatData = await Chat.findById(conversation_id).populate({
         path: "sender",
         select: "username avatar",
@@ -27,8 +27,8 @@ const getConversation = async (req, res) => {
           created: 1,
         },
       });
-      if(!chatData){
-        throw Error("nodata")
+      if (!chatData) {
+        throw Error("nodata");
       }
       return res.status(200).json({
         code: statusCode.OK,
@@ -39,81 +39,70 @@ const getConversation = async (req, res) => {
           is_blocked: chatData.is_blocked == _id,
         },
       });
-    }
-    else if(partner_id&&partner_id.length>1){
-      console.log(_id, partner_id)
-      var chatData = await Chat.findOne({partner_id: {
-        $all:[
-          _id,
-          partner_id
-        ]
-      }});
-      // console.log(chatData)
-      // .populate({
-      //   path: "sender",
-      //   select: "username avatar",
-      //   sort: {
-      //     created: 1,
-      //   },
-      // });
-      if(!chatData){
-        throw Error("nodata")
+    } else if (partner_id && partner_id.length > 1) {
+      console.log(_id, partner_id);
+      var chatData1 = await Chat.findOne({
+        partner_id: {
+          $all: [_id, partner_id],
+        },
+      });
+      if (!chatData1) {
+        var partnerData = await User.findById(partner_id);
+        var userData = req.userDataPass;
+        if (
+          !partnerData ||
+          partnerData.is_blocked ||
+          partnerData.blockedIds.includes(_id) ||
+          userData.blockedIds.includes(partner_id)
+        ) {
+          throw Error("blocked or not existed");
+        }
+
+        var chatData = await new Chat({
+          partner_id: [partner_id, _id],
+          is_blocked: null,
+          created: Date.now(),
+        }).save();
+        partnerData.conversations.push(chatData._id);
+        await partnerData.save();
+        if (_id != partner_id) {
+          await User.findByIdAndUpdate(_id, {
+            $push: {
+              conversations: chatData._id,
+            },
+          });
+        }
+        return res.status(200).json({
+          code: statusCode.OK,
+          message: statusMessage.OK,
+          data: {
+            conversation_id: chatData._id,
+            conversation: [],
+            is_blocked: false,
+          },
+          server:
+            userData.username + " want to message to " + partnerData.username,
+        });
       }
       return res.status(200).json({
         code: statusCode.OK,
         message: statusMessage.OK,
         data: {
-          conversation_id: chatData._id,
-          conversation: chatData.conversation,
-          is_blocked: chatData.is_blocked == _id,
+          conversation_id: chatData1._id,
+          conversation: chatData1.conversation,
+          is_blocked: chatData1.is_blocked == _id,
         },
       });
+    } else {
+      throw Error("nodata");
     }
-    else{
-      var partnerData = await User.findById(partner_id);
-    var userData = req.userDataPass;
-    if (
-      !partnerData ||
-      partnerData.is_blocked ||
-      partnerData.blockedIds.includes(_id)||
-      userData.blockedIds.includes(partner_id)
-    ) {
-      throw Error("blocked or not existed");
-    }
-    
-    var chatData = await new Chat({
-      partner_id: [partner_id, _id],
-      is_blocked: null,
-      created: Date.now(),
-    }).save();
-    partnerData.conversations.push(chatData._id);
-    await partnerData.save();
-    if (_id != partner_id) {
-      await User.findByIdAndUpdate(_id, {
-        $push: {
-          conversations: chatData._id,
-        },
-      });
-    }
-    return res.status(200).json({
-      code: statusCode.OK,
-      message: statusMessage.OK,
-      data: {
-        conversation_id:chatData._id,
-        conversation: [],
-        is_blocked: false
-      },
-      server: userData.username+" want to message to "+partnerData.username,
-    });
-    }
-    
   } catch (error) {
-    console.log(error)
-    if(error.message=="nodata"){
+    console.log(error);
+    if (error.message == "nodata") {
       return res.status(500).json({
-      code: statusCode.NO_DATA_OR_END_OF_LIST_DATA,
-      message: statusMessage.NO_DATA_OR_END_OF_LIST_DATA,
-    });
+        code: statusCode.NO_DATA_OR_END_OF_LIST_DATA,
+        message: statusMessage.NO_DATA_OR_END_OF_LIST_DATA,
+      });
     }
     return res.status(500).json({
       code: statusCode.UNKNOWN_ERROR,
@@ -123,12 +112,12 @@ const getConversation = async (req, res) => {
 };
 
 const getListConversation = async (req, res) => {
-  var {  index, count } = req.query;
+  var { index, count } = req.query;
   const { _id } = req.userDataPass;
   try {
     index = index ? index : 0;
     count = count ? count : 20;
-    
+
     var userData = await User.findById(_id).populate({
       path: "conversations",
       select: "partner_id created is_blocked conversation",
@@ -140,11 +129,13 @@ const getListConversation = async (req, res) => {
         select: "username avatar",
       },
     });
-    console.log(userData.conversations)
-    var numNewMessage= 0;
+    console.log(userData.conversations);
+    var numNewMessage = 0;
     userData.conversations.forEach((element) => {
-      element.conversation = element.conversation[element.conversation.length-1];
-      if(element.conversation&&element.conversation[0].unread=="1") numNewMessage+=1;
+      element.conversation =
+        element.conversation[element.conversation.length - 1];
+      if (element.conversation && element.conversation[0].unread == "1")
+        numNewMessage += 1;
       // return element;
     });
     return res.status(200).json({
@@ -154,7 +145,7 @@ const getListConversation = async (req, res) => {
       numNewMessage: numNewMessage,
     });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     return res.status(500).json({
       code: statusCode.UNKNOWN_ERROR,
       message: statusMessage.UNKNOWN_ERROR,
@@ -163,36 +154,36 @@ const getListConversation = async (req, res) => {
 };
 
 const setReadMessage = async (req, res) => {
-  const { partner_id, conversation_id} = req.query;
+  const { partner_id, conversation_id } = req.query;
   const { _id } = req.userDataPass;
   try {
     var userData = req.userDataPass;
-    if(!userData||userData.blockedIds.inclules(partner_id)){
-      throw Error("nodata")
+    if (!userData || userData.blockedIds.inclules(partner_id)) {
+      throw Error("nodata");
     }
     var chatData = await Chat.findByIdA(conversation_id).populate({
       path: "partner_id",
-      select: "username avatar"
+      select: "username avatar",
     });
-    if(!chatData){
-      throw Error("notfound")
+    if (!chatData) {
+      throw Error("notfound");
     }
-    chatData.conversation = chatData.conversation.map(element=>{
-      element.unread = "0"
-      return element
-    })
+    chatData.conversation = chatData.conversation.map((element) => {
+      element.unread = "0";
+      return element;
+    });
     return res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
-      data: chatData
+      data: chatData,
     });
   } catch (error) {
-    if (error.message=="notfound") {
+    if (error.message == "notfound") {
       return res.status(500).json({
         code: statusCode.POST_IS_NOT_EXISTED,
         message: statusMessage.POST_IS_NOT_EXISTED,
       });
-    } else if (error.message=="nodata") {
+    } else if (error.message == "nodata") {
       return res.status(500).json({
         code: statusCode.NO_DATA_OR_END_OF_LIST_DATA,
         message: statusMessage.NO_DATA_OR_END_OF_LIST_DATA,
@@ -203,7 +194,6 @@ const setReadMessage = async (req, res) => {
         message: statusMessage.UNKNOWN_ERROR,
       });
     }
-    
   }
 };
 
@@ -212,9 +202,9 @@ const deleteConversation = async (req, res) => {
   const { _id } = req.userDataPass;
   try {
     var chatData = await Chat.findByIdAndUpdate(conversation_id, {
-      $pull:{
-        partner_id: _id
-      }
+      $pull: {
+        partner_id: _id,
+      },
     });
     if (!chatData) {
       throw Error("nodata");
@@ -224,7 +214,7 @@ const deleteConversation = async (req, res) => {
       message: statusMessage.OK,
     });
   } catch (error) {
-    if (error.message=="nodata") {
+    if (error.message == "nodata") {
       return res.status(500).json({
         code: statusCode.NO_DATA_OR_END_OF_LIST_DATA,
         message: statusMessage.NO_DATA_OR_END_OF_LIST_DATA,
@@ -235,7 +225,6 @@ const deleteConversation = async (req, res) => {
         message: statusMessage.UNKNOWN_ERROR,
       });
     }
-    
   }
 };
 
@@ -244,9 +233,9 @@ const deleteMessage = async (req, res) => {
   const { _id } = req.userDataPass;
   try {
     var chatData = await Chat.findByIdAndUpdate(conversation_id, {
-      $pull:{
-        conversation: message_id
-      }
+      $pull: {
+        conversation: message_id,
+      },
     });
     if (!chatData) {
       throw Error("nodata");
@@ -255,12 +244,15 @@ const deleteMessage = async (req, res) => {
       code: statusCode.OK,
       message: statusMessage.OK,
       data: {
-        conversation: chatData.conversation.slice(Number(index),Number(index)+ Number(count)),
+        conversation: chatData.conversation.slice(
+          Number(index),
+          Number(index) + Number(count)
+        ),
         is_blocked: chatData.is_blocked == _id,
       },
     });
   } catch (error) {
-    if (error.message=="nodata") {
+    if (error.message == "nodata") {
       return res.status(500).json({
         code: statusCode.NO_DATA_OR_END_OF_LIST_DATA,
         message: statusMessage.NO_DATA_OR_END_OF_LIST_DATA,
@@ -271,7 +263,6 @@ const deleteMessage = async (req, res) => {
         message: statusMessage.UNKNOWN_ERROR,
       });
     }
-    
   }
 };
 
