@@ -67,7 +67,7 @@ const getRequestedFriends = async (req, res) => {
 };
 
 const getListVideos = async (req, res) => {
-  const {
+  var {
     token,
     user_id,
     in_campaign,
@@ -79,6 +79,8 @@ const getListVideos = async (req, res) => {
     count,
   } = req.query;
   const {_id}= req.userDataPass;
+  index=index||0;
+  count=count||20;
   try {
     var postData = await Post.find({
       video: {
@@ -102,7 +104,7 @@ const getListVideos = async (req, res) => {
     return res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
-      data: b.filter(x=>x!=false),
+      data: b.filter(x=>x!=false).slice(Number(index), Number(index)+Number(count)),
     });
   } catch (error) {
     console.log(error)

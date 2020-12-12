@@ -45,25 +45,28 @@ const getListPosts = async (req, res) => {
         populate: {
           path: "author",
           select: "username avatar",
-        },
-        populate: {
-          path: "comment_list",
-          populate:{
-            path: "poster",
+          populate: {
+            path: "comment_list",
+            populate:{
+              path: "poster",
+              select: "username avatar"
+            },
+            
+            // select: "username avatar",
+          },
+          populate: {
+            path: "like_list",
             select: "username avatar"
-          }
-          // select: "username avatar",
+          },
         },
-        populate: {
-          path: "like_list",
-          select: "username avatar"
-        },
+        
         options: {
           sort: {
             created: -1,
           },
         },
       });
+      console.log(resultData)
       return res.status(200).json({
         code: statusCode.OK,
         message: statusMessage.OK,
