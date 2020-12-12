@@ -159,12 +159,13 @@ const getNotification = async (req, res) => {
     
     var userData = await User.findById(_id).populate({
       path: "notifications.id",
+      
       // select: "username avatar",
     });
     return res.status(200).json({
       code: statusCode.OK,
       message: statusMessage.OK,
-      data: userData.notifications,
+      data: userData.notifications.sort((a,b)=>b.id.created-a.id.created).slice(Number(index),Number(index)+Number(count)),
     });
   } catch (error) {
     return res.status(500).json({
