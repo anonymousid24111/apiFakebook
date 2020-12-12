@@ -437,6 +437,28 @@ const like = async (req, res) => {
           is_liked: isLiked
         },
       });
+      
+      
+    } else {
+      // nếu user chưa like thì thêm user id vào danh sách post
+      var isLiked = true;
+      await Post.findByIdAndUpdate(id, {
+        $push: {
+          like_list: _id,
+        },
+        $set: {
+          like: result.like + 1,
+          is_liked: isLiked
+        },
+      });
+      res.status(200).json({
+        code: statusCode.OK,
+        message: statusMessage.OK,
+        data: {
+          like: result.like + 1,
+          is_liked: isLiked
+        },
+      });
       try {
         var newNotification = await new Notification({
           type: "get post",
@@ -458,27 +480,6 @@ const like = async (req, res) => {
       } catch (error) {
         console.log(error)
       }
-      
-    } else {
-      // nếu user chưa like thì thêm user id vào danh sách post
-      var isLiked = true;
-      await Post.findByIdAndUpdate(id, {
-        $push: {
-          like_list: _id,
-        },
-        $set: {
-          like: result.like + 1,
-          is_liked: isLiked
-        },
-      });
-      return res.status(200).json({
-        code: statusCode.OK,
-        message: statusMessage.OK,
-        data: {
-          like: result.like + 1,
-          is_liked: isLiked
-        },
-      });
     }
   } catch (error) {
     console.log(error.message);

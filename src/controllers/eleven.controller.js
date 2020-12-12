@@ -19,22 +19,66 @@ const getConversation = async (req, res) => {
   var { partner_id, conversation_id, index, count } = req.query;
   const { _id } = req.jwtDecoded.data;
   try {
-    var chatData = await Chat.findById(conversation_id).populate({
-      path: "sender",
-      select: "username avatar",
-      sort: {
-        created: 1,
-      },
-    });
-    return res.status(200).json({
-      code: statusCode.OK,
-      message: statusMessage.OK,
-      data: {
-        conversation: chatData.conversation,
-        is_blocked: chatData.is_blocked == _id,
-      },
-    });
+    if(conversation_id){
+      var chatData = await Chat.findById(conversation_id).populate({
+        path: "sender",
+        select: "username avatar",
+        sort: {
+          created: 1,
+        },
+      });
+      if(!chatData){
+        throw Error("nodata")
+      }
+      return res.status(200).json({
+        code: statusCode.OK,
+        message: statusMessage.OK,
+        data: {
+          conversation: chatData.conversation,
+          is_blocked: chatData.is_blocked == _id,
+        },
+      });
+    }
+    else if(partner_id){
+      console.log(_id, partner_id)
+      var chatData = await Chat.findOne({partner_id: {
+        $all:[
+          _id,
+          partner_id
+        ]
+      }});
+      // console.log(chatData)
+      // .populate({
+      //   path: "sender",
+      //   select: "username avatar",
+      //   sort: {
+      //     created: 1,
+      //   },
+      // });
+      if(!chatData){
+        throw Error("nodata")
+      }
+      return res.status(200).json({
+        code: statusCode.OK,
+        message: statusMessage.OK,
+        data: {
+          conversation: chatData.conversation,
+          is_blocked: chatData.is_blocked == _id,
+        },
+      });
+    }
+    else{
+      throw Error("nodata");
+    }
+    
   } catch (error) {
+    console.log(error)
+    if(error.message=="nodata"){
+      return res.status(500).json({
+      code: statusCode.NO_DATA_OR_END_OF_LIST_DATA,
+      message: statusMessage.NO_DATA_OR_END_OF_LIST_DATA,
+    });
+    }
     return res.status(500).json({
       code: statusCode.UNKNOWN_ERROR,
       message: statusMessage.UNKNOWN_ERROR,
@@ -63,7 +107,6 @@ const getListConversation = async (req, res) => {
     console.log(userData.conversations)
     var numNewMessage= 0;
     userData.conversations.forEach((element) => {
-      
       element.conversation = element.conversation[element.conversation.length-1];
       if(element.conversation&&element.conversation[0].unread=="1") numNewMessage+=1;
       // return element;
