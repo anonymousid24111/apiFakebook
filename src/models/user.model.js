@@ -6,6 +6,11 @@ const userSchema = new mongoose.Schema({
   password: String,
   avatar: String,
   token: String,
+  nghenghiep: String,
+  songtai: String,
+  dentu: String,
+  hoctai: String,
+  sothich: String,
   is_blocked: String,
   description: String,
   city: String,
@@ -67,6 +72,7 @@ const userSchema = new mongoose.Schema({
     notification_on: { type: String, default: "1" },
     vibrant_on: { type: String, default: "1" },
     led_on: { type: String, default: "1" },
+    
   },
   conversations: [
     {

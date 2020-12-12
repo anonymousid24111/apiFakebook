@@ -25,6 +25,11 @@ const setUserInfo = async (req, res) => {
     city,
     country,
     link,
+    songtai,
+    dentu,
+    hoctai,
+    nghenghiep,
+    sothich
   } = req.query;
   const {_id}= req.userDataPass;
   try {
@@ -38,6 +43,11 @@ const setUserInfo = async (req, res) => {
     userData.city = city?city:userData.city;
     userData.country = country?country:userData.country;
     userData.link = link?link:userData.link;
+    userData.nghenghiep = nghenghiep?nghenghiep:userData.nghenghiep;
+    userData.hoctai = hoctai?hoctai:userData.hoctai;
+    userData.songtai = songtai?songtai:userData.songtai;
+    userData.dentu = dentu?dentu:userData.dentu;
+    userData.sothich = sothich?sothich:userData.sothich;
     await userData.save();
     return res.status(200).json({
       code: statusCode.OK,
@@ -49,7 +59,12 @@ const setUserInfo = async (req, res) => {
         country: country,
         city: city,
         link: "server không cho phép thay",
-        description: description
+        description: description,
+        nghenghiep: nghenghiep,
+        hoctai: hoctai,
+        sothich: sothich,
+        songtai: songtai,
+        dentu: dentu
       }
     })
   } catch (error) {
@@ -117,7 +132,7 @@ const getUserInfo = async (req, res) => {
       is_friend: is_friend,
       sendRequested: sendRequested,
       requested:requested
-
+      
     });
   } catch (error) {
     console.log(error)
