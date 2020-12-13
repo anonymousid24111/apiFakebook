@@ -66,11 +66,13 @@ const getListPosts = async (req, res) => {
           },
         },
       });
-      console.log(resultData)
+      resultData.postIds.map(e=>{
+        e.is_liked= e.like_list.includes(_id);
+      })
       return res.status(200).json({
         code: statusCode.OK,
         message: statusMessage.OK,
-        data: resultData.postIds
+        data: resultData.postIds.slice(Number(index),Number(index)+Number(count))
       })
     }
 
@@ -93,8 +95,16 @@ const getListPosts = async (req, res) => {
     });
     var postRes = [];
     result.friends.map((e, index) => {
-      postRes = postRes.concat(e.postIds);
-      // console.log(postRes)
+      // console.log(e.postIds);
+      var temp=e.postIds;
+      console.log(temp)
+      
+      temp.map(e2=>{
+        if(e2.like_list){
+          e2.is_liked=e2.like_list.includes(_id);
+        }
+      })
+      postRes = postRes.concat(temp);
     });
     if (postRes.length==0) {
       throw Error("nodata");
@@ -117,7 +127,7 @@ const getListPosts = async (req, res) => {
       data: {
         posts: postRes.slice(Number(index),Number(index)+ Number(count)),
         last_id: postRes[0]._id,
-        new_items: postRes.length-count,
+        new_items: findLastIndex,
       },
     });
   } catch (error) {

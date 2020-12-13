@@ -90,6 +90,12 @@ const getListVideos = async (req, res) => {
       path: "author",
       select: "username avatar"
     });
+    postData.map(e=>{
+      if(e.like_list){
+
+        e.is_liked=e.like_list.includes(_id);
+      }
+    })
     var userData = req.userDataPass;
     // user block athor
     var b = await Promise.all(postData.map(async (element, index)=>{

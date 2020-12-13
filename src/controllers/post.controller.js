@@ -426,7 +426,7 @@ const like = async (req, res) => {
         },
         $set: {
           like: result.like - 1,
-          is_liked: isLiked
+          // is_liked: isLiked
         },
       });
       res.status(200).json({
@@ -448,7 +448,7 @@ const like = async (req, res) => {
         },
         $set: {
           like: result.like + 1,
-          is_liked: isLiked
+          is_liked: false
         },
       });
       res.status(200).json({
@@ -621,11 +621,11 @@ const setComment = async (req, res) => {
 
   // check params
   try {
-    if (!comment || !id ) {
-      throw Error("params");
-    }
-    // index = index ? index : 0;
-    // count = count ? count : 20;
+    // if (!comment || !id ) {
+    //   throw Error("params");
+    // }
+    index = index ? index : 0;
+    count = count ? count : 20;
     // tim bai viet
     var result = await Post.findOne({ _id: id });
     // neu khong tim thay bai viet
@@ -660,9 +660,7 @@ const setComment = async (req, res) => {
     await result.save();
     await newcomment.save();
     console.log(newcomment);
-    var result2 = await Post.findOne({ _id: id }, (err, docs) => {
-      if (err) throw err;
-    }).populate({
+    var result2 = await Post.findOne({ _id: id }).populate({
       path: "comment_list",
       // skip: index||1,
       options: { sort: { created: -1 } },
