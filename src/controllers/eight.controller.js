@@ -77,11 +77,12 @@ const setAcceptFriend = async (req, res) => {
      
       var newNotification =await new Notification({
         type: "trang user",
-        object_id: user_id,
+        object_id: _id,
         title: userData.username+" đã chấp nhận lời mời kết bạn",
         created: Date.now(),
         avatar: userData.avatar,
-        group: "1"
+        group: "1",
+        userData: _id,
       }).save();
       var chatData = await new Chat({
         partner_id: [user_id, _id],

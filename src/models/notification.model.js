@@ -6,7 +6,8 @@ const notificationSchema = new mongoose.Schema({
   author: { type: Schema.Types.ObjectId, ref: 'user' },
   notification: String,
   created: Date,
-
+  postData: { type: Schema.Types.ObjectId, ref: 'post' },
+  userData: { type: Schema.Types.ObjectId, ref: 'user' },
   type: String,
   object_id: String,
   title: String,
