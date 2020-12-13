@@ -11,6 +11,7 @@ const userSchema = new mongoose.Schema({
   dentu: String,
   hoctai: String,
   sothich: String,
+  birthday: String,
   is_blocked: String,
   description: String,
   city: String,

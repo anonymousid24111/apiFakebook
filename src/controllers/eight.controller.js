@@ -162,9 +162,10 @@ const getListSuggestedFriends = async (req, res) => {
     var otherUsersData = await User.find({});
     var result = await Promise.all(
       otherUsersData.map((element) => {
+        // console.log()
         if (
           userData.friends.includes(element._id) ||
-          _id == element._id ||
+          _id.toString()==element._id.toString() ||
           userData.blockedIds.includes(element._id) ||
           element.blockedIds.includes(_id)||
           userData.not_suggest.includes(element._id)||

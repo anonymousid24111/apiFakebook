@@ -93,7 +93,7 @@ const getSavedSearch = async (req, res) => {
         return res.status(200).json({
             code: statusCode.OK,
             message: statusMessage.OK,
-            data: userData.savedSearch.slice(Number(index),Number(index)+Number(count) ),
+            data: userData.savedSearch.sort((a,b)=>b.created-a.created).slice(Number(index),Number(index)+Number(count) ),
         })
     } catch (error) {
         if (error.message == "params") {

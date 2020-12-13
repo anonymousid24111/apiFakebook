@@ -24,6 +24,7 @@ const setUserInfo = async (req, res) => {
     address,
     city,
     country,
+    birthday,
     link,
     songtai,
     dentu,
@@ -46,6 +47,7 @@ const setUserInfo = async (req, res) => {
     userData.nghenghiep = nghenghiep?nghenghiep:userData.nghenghiep;
     userData.hoctai = hoctai?hoctai:userData.hoctai;
     userData.songtai = songtai?songtai:userData.songtai;
+    userData.birthday = birthday?birthday:userData.birthday;
     userData.dentu = dentu?dentu:userData.dentu;
     userData.sothich = sothich?sothich:userData.sothich;
     await userData.save();
@@ -105,7 +107,7 @@ const getUserInfo = async (req, res) => {
     }
     // nếu xem thông tin của người khác
     var otherUserData = await User.findById(user_id).select(
-      "username created description avatar cover_image link address city country friends blockedIds is_blocked"
+      "username created description avatar cover_image link address city country friends blockedIds is_blocked birthday"
     ).populate({
       path: "friends",
       select: "username avatar"
