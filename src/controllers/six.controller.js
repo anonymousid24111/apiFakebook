@@ -120,7 +120,7 @@ const delSavedSearch = async (req, res) => {
     const { _id } = req.userDataPass;
     // check params
     try {
-        if(all==1){
+        if(Number(all)==1){
             await User.findByIdAndUpdate(_id, {
                 $set: {
                     savedSearch: []
@@ -131,7 +131,7 @@ const delSavedSearch = async (req, res) => {
                 message: statusMessage.OK
             })
         }
-        else if (all==0&&search_id) {
+        else if (Number(all)==0&&search_id) {
             await User.findByIdAndUpdate(_id,{
                 $pull:{
                     savedSearch:{

@@ -113,6 +113,7 @@ const addPost = async (req, res) => {
         group: "1",
         created: Date.now(),
         read: "0",
+        userData: _id,
         postData: newPost._id
       }).save();
     } catch (error) {
