@@ -89,7 +89,7 @@ const getListVideos = async (req, res) => {
     }).populate({
       path: "author",
       select: "username avatar"
-    });
+    }).sort({created: -1});
     postData.map(e=>{
       if(e.like_list){
 

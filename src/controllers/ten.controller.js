@@ -56,8 +56,8 @@ const setUserInfo = async (req, res) => {
       message: statusMessage.OK,
       data: {
         username: username,
-        avatar: result.avatar?result.avatar.url:userData.avatar,
-        cover_image: result.cover_image?result.cover_image.url:userData.cover_image,
+        avatar: result.avatar?result.avatar.url:"",
+        cover_image: result.cover_image?result.cover_image.url:"",
         country: country,
         city: city,
         link: "server không cho phép thay",

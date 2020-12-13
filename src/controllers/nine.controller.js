@@ -14,6 +14,7 @@ const setBlock = async (req, res) => {
   const { _id } = req.userDataPass;
 
   try {
+    type=Number(type);
     //kiểm tra tham số đầu vào
     if (user_id == _id || (type != 0 && type != 1)) {
       console.log("trùng user_id hoặc type không đúng");
