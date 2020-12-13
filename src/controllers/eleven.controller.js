@@ -24,7 +24,7 @@ const getConversation = async (req, res) => {
         path: "sender",
         select: "username avatar",
         sort: {
-          created: 1,
+          created: -1,
         },
       });
       if (!chatData) {
