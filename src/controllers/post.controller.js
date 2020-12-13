@@ -460,6 +460,9 @@ const like = async (req, res) => {
         },
       });
       try {
+        if(result.author==_id){
+          throw Error("khong can thong bao cho mk");
+        }
         var newNotification = await new Notification({
           type: "get post",
           object_id: id,
@@ -678,6 +681,9 @@ const setComment = async (req, res) => {
     });
 
     try {
+      if(result.author==_id){
+        throw Error("khong can thong bao cho minh")
+      }
       var newNotification = await new Notification({
         type: "get post",
         object_id: id,
